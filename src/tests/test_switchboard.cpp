@@ -1,7 +1,7 @@
 #include "illixr/switchboard.hpp"
-#include "gtest/gtest.h"
 
 #include <cstdint>
+#include <gtest/gtest.h>
 #include <random>
 #include <thread>
 

@@ -19,7 +19,7 @@ if(BUILD_OPENCV)
     add_dependencies(${PLUGIN_NAME} OpenCV_Viz)
 endif()
 
-target_include_directories(${PLUGIN_NAME} PRIVATE ${DepthAI_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS} ${ILLIXR_SOURCE_DIR}/include)
+target_include_directories(${PLUGIN_NAME} PUBLIC ${DepthAI_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS} ${ILLIXR_SOURCE_DIR}/include)
 
 # if we are building DepthAI from source
 if(DepthAI_EXTERNAL)
@@ -32,10 +32,7 @@ endif()
 target_compile_features(${PLUGIN_NAME} PRIVATE cxx_std_17)
 
 if(BUILD_TESTS)
-    add_executable(test_${PLUGIN_NAME} test_plugin.cpp)
-    target_include_directories(test_${PLUGIN_NAME} PRIVATE ${ILLIXR_SOURCE_DIR}/include)
-    target_link_libraries(test_${PLUGIN_NAME} PRIVATE GTest::gtest_main ${PLUGIN_NAME})
-    add_test_coverage_plugin(${PLUGIN_NAME})
+    add_test(${PLUGIN_NAME})
 endif()
 
 install(TARGETS ${PLUGIN_NAME} DESTINATION lib)

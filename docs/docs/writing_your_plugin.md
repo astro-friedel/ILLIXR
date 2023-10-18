@@ -7,7 +7,8 @@ To add a new plugin
 1. create a new subdirectory in the `plugins` directory named for your plugin (no spaces)
 2. put your code in this new subdirectory (additional subdirectories containing parts of your code are allowed)
 3. create a CMakeLists.txt file in this new subdirectory. See the template below
-4. add the plugin to the `profiles/plugins.yaml` file, the name must match the subdirectory you created; it should go in the `internal_plugins` entry
+4. add the plugin to the `profiles/plugins.yaml` file, the name must match the subdirectory you created; it should go in the `all_plugins` entry
+5. it is strongly recommended to have unit tests for all pluigns, see [Unit Tests][16] for instructions
 
 For the examples below is for a plugin called tracker, so just replace any instance of tracker with
 the name of your plugin.
@@ -345,3 +346,4 @@ To add your own functionality via the plugin interface:
 [13]:   api/html/classILLIXR_1_1plugin.html
 [14]:   api/html/classILLIXR_1_1switchboard.html
 [15]:   glossary.md#plugin
+[16]:   unittest.md

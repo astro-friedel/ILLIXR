@@ -30,3 +30,10 @@ target_link_libraries(plugin.main${ILLIXR_BUILD_SUFFIX} ${X11_LIBRARIES} ${GLEW_
 
 install(TARGETS main${ILLIXR_BUILD_SUFFIX}.exe DESTINATION bin)
 install(TARGETS plugin.main${ILLIXR_BUILD_SUFFIX} DESTINATION lib)
+
+#############
+# Tests
+#############
+if(BUILD_TESTS)
+    include(src/tests/CMakeLists.txt)
+endif()

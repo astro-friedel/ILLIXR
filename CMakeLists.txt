@@ -192,6 +192,8 @@ find_package(Git REQUIRED)
 
 if(BUILD_TESTS)
     find_package(GTest REQUIRED)
+    enable_testing()
+    include(GoogleTest)
     if(ENABLE_COVERAGE)
         include(CodeCoverage)
         set(COVERAGE_DEPENDENCIES "")
@@ -207,11 +209,6 @@ find_package(Threads)
 
 include(src/CMakeLists.txt)
 
-if(BUILD_TESTS)
-    enable_testing()
-    include(GoogleTest)
-    include(tests/CMakeLists.txt)
-endif()
 
 # set any plugins that are being built
 set(FULL_PLUGIN_LIST "")

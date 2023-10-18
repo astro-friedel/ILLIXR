@@ -30,6 +30,7 @@ target_include_directories(${PLUGIN_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${O
 
 PROTOBUF_TARGET_CPP(${PLUGIN_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/../proto ${protobuf_files})
 target_link_libraries(${PLUGIN_NAME}
+        PUBLIC
         ${OpenCV_LIBS}
         protobuf::libprotobuf
         )
@@ -54,6 +55,10 @@ endif()
 
 target_link_libraries(${PLUGIN_NAME} ${GST_APP_LIBRARIES} ${GST_VIDEO_LIBRARIES} ${GST_AUDIO_LIBRARIES} spdlog::spdlog)
 target_compile_features(${PLUGIN_NAME} PRIVATE cxx_std_17)
+
+if(BUILD_TESTS)
+    add_test(${PLUGIN_NAME})
+endif()
 
 install(TARGETS ${PLUGIN_NAME} DESTINATION lib)
 

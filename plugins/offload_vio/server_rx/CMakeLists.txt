@@ -30,6 +30,7 @@ target_include_directories(${PLUGIN_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${O
 
 PROTOBUF_TARGET_CPP(${PLUGIN_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/../proto ${protobuf_files})
 target_link_libraries(${PLUGIN_NAME}
+        PUBLIC
         ${OpenCV_LIBS}
         protobuf::libprotobuf
         spdlog::spdlog
@@ -52,10 +53,7 @@ include_directories(
 target_link_libraries(${PLUGIN_NAME} ${GST_APP_LIBRARIES} ${GST_VIDEO_LIBRARIES} ${GST_AUDIO_LIBRARIES})
 
 if(BUILD_TESTS)
-    add_executable(test_${PLUGIN_NAME} test_plugin.cpp)
-    target_include_directories(test_${PLUGIN_NAME} PRIVATE ${ILLIXR_SOURCE_DIR}/include)
-    target_link_libraries(test_${PLUGIN_NAME} PRIVATE GTest::gtest_main ${PLUGIN_NAME})
-    add_test_coverage_plugin(${PLUGIN_NAME})
+    add_test(${PLUGIN_NAME})
 endif()
 
 install(TARGETS ${PLUGIN_NAME} DESTINATION lib)
