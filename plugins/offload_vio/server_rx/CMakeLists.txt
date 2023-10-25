@@ -50,7 +50,7 @@ include_directories(
         ${GLIB_INCLUDE_DIRS}
 )
 
-target_link_libraries(${PLUGIN_NAME} ${GST_APP_LIBRARIES} ${GST_VIDEO_LIBRARIES} ${GST_AUDIO_LIBRARIES})
+target_link_libraries(${PLUGIN_NAME} PUBLIC ${GST_APP_LIBRARIES} ${GST_VIDEO_LIBRARIES} ${GST_AUDIO_LIBRARIES})
 
 if(BUILD_TESTS)
     add_test(${PLUGIN_NAME})
