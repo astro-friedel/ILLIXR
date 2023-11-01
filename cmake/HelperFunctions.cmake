@@ -318,9 +318,6 @@ macro(add_test_coverage name)
     endif()
 endmacro()
 
-macro(add_test_coverage_plugin name)
-endmacro()
-
 macro(add_test plugin_name)
     add_executable(test_${plugin_name} test/test_plugin.cpp)
     target_include_directories(test_${plugin_name} PRIVATE ${ILLIXR_SOURCE_DIR}/include)
