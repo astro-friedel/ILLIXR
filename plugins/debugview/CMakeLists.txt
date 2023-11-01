@@ -51,6 +51,7 @@ target_compile_features(${PLUGIN_NAME} PRIVATE cxx_std_17)
 
 if(BUILD_TESTS)
     add_test(${PLUGIN_NAME})
+    add_dependencies(test_${PLUGIN_NAME} mock_pose)
 endif()
 
 install(TARGETS ${PLUGIN_NAME} DESTINATION lib)

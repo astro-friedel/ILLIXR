@@ -55,6 +55,7 @@ install_shaders(SPIRV_BINARY_FILES vkdemo ${PLUGIN_NAME})
 
 if(BUILD_TESTS)
     add_test(${PLUGIN_NAME})
+    add_dependencies(test_${PLUGIN_NAME} mock_display)
 endif()
 
 install(TARGETS ${PLUGIN_NAME} DESTINATION lib)

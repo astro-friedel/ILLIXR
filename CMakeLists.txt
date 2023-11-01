@@ -198,6 +198,7 @@ if(BUILD_TESTS)
         include(CodeCoverage)
         set(COVERAGE_DEPENDENCIES "")
     endif()
+    include(plugins/test/CMakeLists.txt)
 endif()
 
 find_package(Boost REQUIRED COMPONENTS filesystem serialization)

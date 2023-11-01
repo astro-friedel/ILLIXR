@@ -26,6 +26,7 @@ target_include_directories(${PLUGIN_NAME} PUBLIC ${Vulkan_INCLUDE_DIRS} ${ILLIXR
 
 if(BUILD_TESTS)
     add_test(${PLUGIN_NAME})
+    add_dependencies(test_${PLUGIN_NAME} mock_app mock_display mock_timewarp_vk mock_pose)
 endif()
 
 install(TARGETS ${PLUGIN_NAME} DESTINATION lib)

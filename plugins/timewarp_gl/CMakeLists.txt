@@ -32,6 +32,7 @@ target_compile_definitions(${PLUGIN_NAME} PRIVATE -DUSE_GL)
 
 if(BUILD_TESTS)
     add_test(${PLUGIN_NAME})
+    add_dependencies(test_${PLUGIN_NAME} mock_pose)
 endif()
 
 install(TARGETS ${PLUGIN_NAME} DESTINATION lib)
