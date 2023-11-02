@@ -8,7 +8,8 @@ set(INFINITAM_CMAKE_ARGS "")
 
 ExternalProject_Add(InfiniTAM
         GIT_REPOSITORY https://github.com/ILLIXR/InfiniTAM.git        # Git repo for source code
-        GIT_TAG cb686800157b7bc68ab46f564abb4a0e24ffbeec              # via Yihan on slack
+        #        GIT_TAG cb686800157b7bc68ab46f564abb4a0e24ffbeec              # via Yihan on slack
+        GIT_TAG 264de7919c0c2c06ee8b7d5284535d84a3f54c06 # MVM's first push
         PREFIX ${CMAKE_BINARY_DIR}/_deps/infinitam                    # the build directory
         #DEPENDS ${PortAudio_DEP_STR} ${SpatialAudio_DEP_STR} ${OpenCV_DEP_STR}  # dependencies of this module
         #arguments to pass to CMake
