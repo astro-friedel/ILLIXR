@@ -1,6 +1,7 @@
 #pragma once
 
 #include "switchboard.hpp"
+#include "data_format.hpp"
 
 #include <opencv2/core/mat.hpp>
 
@@ -54,5 +55,20 @@ struct rgb_depth_pose_type : public switchboard::event {
         { }
     };
 
+// for offline_scannet
+struct scene_recon_type : public switchboard::event {
+    [[maybe_unused]] time_point time;
+    pose_type pose;
+    cv::Mat depth;
+    cv::Mat rgb; //rgb is only if you need colored mesh
+    bool last_frame;
+    scene_recon_type(time_point camera_time, pose_type pose_, cv::Mat depth_, cv::Mat rgb_, bool is_last_frame)
+        : time{camera_time}
+        , pose{pose_}
+        , depth{depth_}
+        , rgb{rgb_}
+        , last_frame{is_last_frame}
+        {}
+};
 
 } // namespace ILLIXR
