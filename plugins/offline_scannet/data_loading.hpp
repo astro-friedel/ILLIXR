@@ -1,6 +1,6 @@
-#include "common/error_util.hpp"
-#include "csv_iterator.hpp"
-#include "common/data_format.hpp"
+#include "illixr/error_util.hpp"
+#include "illixr/csv_iterator.hpp"
+#include "illixr/data_format.hpp"
 #include <cassert>
 #include <eigen3/Eigen/Dense>
 #include <fstream>
