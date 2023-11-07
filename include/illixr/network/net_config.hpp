@@ -17,6 +17,12 @@ const std::string CLIENT_IP     = "127.0.0.1";
 const int         CLIENT_PORT_1 = 5002;
 const int         CLIENT_PORT_2 = 5003;
 
+const std::string MY_IP   = "127.0.0.1";
+const int         MY_PORT = 6000;
+
+const std::string OTHER_IP   = "127.0.0.1";
+const int         OTHER_PORT = 7000;
+
 } // namespace ILLIXR
 
 #endif /* NET_CONFIG_HPP */
