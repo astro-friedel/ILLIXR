@@ -1,5 +1,6 @@
 #include "illixr/switchboard.hpp"
 #include "illixr/data_format.hpp"
+#include "illixr/opencv_data_types.hpp"
 #include "data_loading.hpp"
 #include "illixr/data_format.hpp"
 #include "illixr/threadloop.hpp"
