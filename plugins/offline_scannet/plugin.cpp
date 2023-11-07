@@ -1,4 +1,5 @@
 #include "illixr/data_format.hpp"
+#include "illixr/opencv_data_types.hpp"
 #include "illixr/global_module_defs.hpp"
 #include "illixr/relative_clock.hpp"
 #include "illixr/switchboard.hpp"
