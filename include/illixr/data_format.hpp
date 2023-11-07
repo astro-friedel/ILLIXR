@@ -15,6 +15,8 @@
 namespace ILLIXR {
 using ullong = unsigned long long;
 
+typedef std::chrono::system_clock::time_point time_type;
+
 struct imu_type : switchboard::event {
     time_point      time;
     Eigen::Vector3d angular_v;
