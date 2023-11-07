@@ -1,9 +1,9 @@
-#include "common/switchboard.hpp"
-#include "common/data_format.hpp"
+#include "illixr/switchboard.hpp"
+#include "illixr/data_format.hpp"
 #include "data_loading.hpp"
-#include "common/data_format.hpp"
-#include "common/threadloop.hpp"
-#include "common/global_module_defs.hpp"
+#include "illixr/data_format.hpp"
+#include "illixr/threadloop.hpp"
+#include "illixr/global_module_defs.hpp"
 #include <cassert>
 
 using namespace ILLIXR;
