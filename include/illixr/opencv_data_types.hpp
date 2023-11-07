@@ -5,7 +5,7 @@
 #include <opencv2/core/mat.hpp>
 
 namespace ILLIXR {
-
+using ullong = unsigned long long;
 struct cam_type : switchboard::event {
     time_point time;
     cv::Mat    img0;
@@ -27,5 +27,32 @@ struct rgb_depth_type : public switchboard::event {
         , rgb{std::move(_rgb)}
         , depth{std::move(_depth)} { }
 };
+
+//pyh temp format for TUM with groundtruth
+struct rgb_depth_pose_type : public switchboard::event {
+    std::optional<cv::Mat> rgb;
+    std::optional<cv::Mat> depth;
+    //storing groundtruth info
+    std::optional<Eigen::Vector3f> position;
+    std::optional<Eigen::Quaternionf> orientation;
+    //std::optional<Eigen::Matrix4f> transformation;
+    [[maybe_unused]] ullong timestamp;
+    rgb_depth_pose_type(
+        std::optional<cv::Mat> _rgb,
+        std::optional<cv::Mat> _depth,
+        std::optional<Eigen::Vector3f> _pos,
+        std::optional<Eigen::Quaternionf> _ori,
+        //std::optional<Eigen::Matrix4f> _trans,
+        ullong _timestamp
+        )
+        : rgb{_rgb}
+        , depth{_depth}
+        , position{_pos}
+        , orientation{_ori}
+        //, transformation{_trans}
+        , timestamp{_timestamp}
+        { }
+    };
+
 
 } // namespace ILLIXR
