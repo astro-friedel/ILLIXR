@@ -48,19 +48,19 @@ public:
      * application and timewarp with their respective passes.
      */
     void _p_thread_setup() override {
-        depth_images.resize(NATIVE_RENDERER_BUFFER_POOL_SIZE);
-        offscreen_images.resize(NATIVE_RENDERER_BUFFER_POOL_SIZE);
+        buffer_pool->depth_image_pool.resize(NATIVE_RENDERER_BUFFER_POOL_SIZE);
+        buffer_pool->image_pool.resize(NATIVE_RENDERER_BUFFER_POOL_SIZE);
 
         if (tw->is_external() || src->is_external()) {
             create_offscreen_pool();
         }
         for (auto i = 0; i < NATIVE_RENDERER_BUFFER_POOL_SIZE; i++) {
             for (auto eye = 0; eye < 2; eye++) {
-                create_offscreen_target(offscreen_images[i][eye]);
-                create_depth_image(depth_images[i][eye]);
+                create_offscreen_target(buffer_pool->image_pool[i][eye]);
+                create_depth_image(buffer_pool->depth_image_pool[i][eye]);
             }
         }
-        this->buffer_pool = std::make_shared<vulkan::buffer_pool<pose_type>>(offscreen_images, depth_images);
+        this->buffer_pool->resize();
 
         command_pool            = vulkan::create_command_pool(ds->vk_device, ds->queues[vulkan::queue::GRAPHICS].family);
         app_command_buffer      = vulkan::create_command_buffer(ds->vk_device, command_pool);
@@ -69,7 +69,9 @@ public:
         create_app_pass();
         create_timewarp_pass();
         create_sync_objects();
-        create_offscreen_framebuffers();
+        if (!src->is_external()) {
+            create_offscreen_framebuffers();
+        }
         create_swapchain_framebuffers();
         src->setup(app_pass, 0, buffer_pool);
         tw->setup(timewarp_pass, 0, buffer_pool, true);
@@ -479,13 +481,31 @@ private:
         VK_ASSERT_SUCCESS(vkCreateImageView(ds->vk_device, &view_info, nullptr, &depth_image.image_view))
     }
 
+    VkFormat get_offscreen_pool_format() {
+        VkFormat fmt = VK_FORMAT_B8G8R8A8_UNORM;
+        if (tw->is_external() && src->is_external() && tw->get_preferred_image_format() != src->get_preferred_image_format()) {
+            throw std::runtime_error("timewarp and app have different preferred image formats");
+        } else if (tw->is_external()) {
+            fmt = tw->get_preferred_image_format();
+        } else if (src->is_external()) {
+            fmt = src->get_preferred_image_format();
+        }
+        return fmt;
+    }
+
     void create_offscreen_pool() {
+        auto fmt = get_offscreen_pool_format();
+
+        if (fmt != VK_FORMAT_B8G8R8A8_UNORM) {
+            create_multi_plane_conversion();
+        }
+
         VkImageCreateInfo sample_create_info{
             VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO, // sType
             nullptr,                             // pNext
             0,                                   // flags
             VK_IMAGE_TYPE_2D,                    // imageType
-            VK_FORMAT_B8G8R8A8_UNORM,            // format
+            fmt,            // format
             {
                 ds->swapchain_extent.width / 2, // width
                 ds->swapchain_extent.height,    // height
@@ -496,7 +516,7 @@ private:
             VK_SAMPLE_COUNT_1_BIT,              // samples
             VK_IMAGE_TILING_OPTIMAL,            // tiling
             static_cast<VkImageUsageFlags>(
-                (VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT) |
+                (src->is_external() ? VK_IMAGE_USAGE_TRANSFER_DST_BIT : VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT) |
                 (tw->is_external() ? VK_IMAGE_USAGE_TRANSFER_SRC_BIT : VK_IMAGE_USAGE_SAMPLED_BIT)), // usage
             {},                                                                                      // sharingMode
             0,                                                                                       // queueFamilyIndexCount
@@ -521,6 +541,24 @@ private:
         VK_ASSERT_SUCCESS(vmaCreatePool(ds->vma_allocator, &offscreen_pool_create_info, &offscreen_pool));
     }
 
+    void create_multi_plane_conversion() {
+        VkSamplerYcbcrConversionCreateInfo conversion_create_info = {
+            VK_STRUCTURE_TYPE_SAMPLER_YCBCR_CONVERSION_CREATE_INFO, // sType
+            nullptr,                                                 // pNext
+            get_offscreen_pool_format(),         // format
+            VK_SAMPLER_YCBCR_MODEL_CONVERSION_YCBCR_2020,          // ycbcrModel
+            VK_SAMPLER_YCBCR_RANGE_ITU_FULL,                        // ycbcrRange
+            {VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY,
+             VK_COMPONENT_SWIZZLE_IDENTITY}, // components
+            VK_CHROMA_LOCATION_COSITED_EVEN,  // xChromaOffset
+            VK_CHROMA_LOCATION_COSITED_EVEN,  // yChromaOffset
+            VK_FILTER_NEAREST,                 // chromaFilter
+            VK_FALSE,                          // forceExplicitReconstruction
+        };
+
+        VK_ASSERT_SUCCESS(vkCreateSamplerYcbcrConversion(ds->vk_device, &conversion_create_info, nullptr, &buffer_pool->ycbcr_conversion))
+    }
+
     /**
      * @brief Creates an offscreen target for the application to render to.
      * @param image Pointer to the offscreen image handle.
@@ -543,12 +581,14 @@ private:
             queue_family_indices.push_back(ds->queues[vulkan::queue::queue_type::DEDICATED_TRANSFER].family);
         }
 
+        auto fmt = get_offscreen_pool_format();
+
         image.image_info = {
             VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,                                            // sType
             (src->is_external() || tw->is_external()) ? &image.export_image_info : nullptr, // pNext
             0,                                                                              // flags
             VK_IMAGE_TYPE_2D,                                                               // imageType
-            VK_FORMAT_B8G8R8A8_UNORM,                                                       // format
+            fmt,                                                       // format
             {
                 ds->swapchain_extent.width / 2, // width
                 ds->swapchain_extent.height,    // height
@@ -559,7 +599,7 @@ private:
             VK_SAMPLE_COUNT_1_BIT,              // samples
             VK_IMAGE_TILING_OPTIMAL,            // tiling
             static_cast<VkImageUsageFlags>(
-                (VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT) |
+                (src->is_external() ? VK_IMAGE_USAGE_TRANSFER_DST_BIT : VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT) |
                 (tw->is_external() ? VK_IMAGE_USAGE_TRANSFER_SRC_BIT : VK_IMAGE_USAGE_SAMPLED_BIT)), // usage
             VK_SHARING_MODE_CONCURRENT,                                                              // sharingMode
             static_cast<uint32_t>(queue_family_indices.size()),                                      // queueFamilyIndexCount
@@ -577,13 +617,19 @@ private:
 
         assert(image.allocation_info.deviceMemory);
 
+        VkSamplerYcbcrConversionInfo conversion_info = {
+            VK_STRUCTURE_TYPE_SAMPLER_YCBCR_CONVERSION_INFO, // sType
+            nullptr,                                         // pNext
+            buffer_pool->ycbcr_conversion                    // conversion
+        };
+
         VkImageViewCreateInfo view_info{
             VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO, // sType
-            nullptr,                                  // pNext
+            buffer_pool->ycbcr_conversion ? &conversion_info : nullptr,                                  // pNext
             0,                                        // flags
             image.image,                              // image
             VK_IMAGE_VIEW_TYPE_2D,                    // viewType
-            VK_FORMAT_B8G8R8A8_UNORM,                 // format
+            get_offscreen_pool_format(),                 // format
             {},                                       // components
             {
                 VK_IMAGE_ASPECT_COLOR_BIT, // aspectMask
@@ -605,7 +651,7 @@ private:
 
         for (auto i = 0; i < NATIVE_RENDERER_BUFFER_POOL_SIZE; i++) {
             for (auto eye = 0; eye < 2; eye++) {
-                std::array<VkImageView, 2> attachments = {offscreen_images[i][eye].image_view, depth_images[i][eye].image_view};
+                std::array<VkImageView, 2> attachments = {buffer_pool->image_pool[i][eye].image_view, buffer_pool->depth_image_pool[i][eye].image_view};
 
                 assert(app_pass != VK_NULL_HANDLE);
                 VkFramebufferCreateInfo framebuffer_info{
@@ -801,14 +847,10 @@ private:
     VkCommandBuffer app_command_buffer{};
     VkCommandBuffer timewarp_command_buffer{};
 
-    std::vector<std::array<vulkan::vk_image, 2>> depth_images{};
-
     VkExportMemoryAllocateInfo                offscreen_export_mem_alloc_info{};
     VmaPoolCreateInfo                         offscreen_pool_create_info{};
     VmaPool                                   offscreen_pool{};
     std::vector<std::array<VkFramebuffer, 2>> offscreen_framebuffers{};
-
-    std::vector<std::array<vulkan::vk_image, 2>> offscreen_images{};
 
     std::vector<VkFramebuffer> swapchain_framebuffers{};
     VkRenderPass               app_pass{};
@@ -825,6 +867,6 @@ private:
     int        fps{};
     time_point last_fps_update;
     switchboard::reader<switchboard::event_wrapper<time_point>> _m_vsync;
-    std::shared_ptr<vulkan::buffer_pool<pose_type>>             buffer_pool;
+    std::shared_ptr<vulkan::buffer_pool<pose_type>>             buffer_pool = std::make_shared<vulkan::buffer_pool<pose_type>>();
 };
 PLUGIN_MAIN(native_renderer)

@@ -33,6 +33,10 @@ public:
      */
     virtual void update_uniforms(const pose_type& render_pose) {};
 
+    virtual VkFormat get_preferred_image_format() {
+        return VK_FORMAT_B8G8R8A8_UNORM;
+    }
+
     /**
      * @brief Destroy the render pass and free all Vulkan resources.
      */

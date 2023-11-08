@@ -108,11 +108,10 @@ public:
             create_index_buffer();
             create_descriptor_set_layout();
             create_uniform_buffer();
-            create_texture_sampler();
         }
     }
 
-    void setup(VkRenderPass render_pass, uint32_t subpass, std::shared_ptr<vulkan::buffer_pool<pose_type>> buffer_pool,
+    void setup(VkRenderPass render_pass, uint32_t subpass, std::shared_ptr<vulkan::buffer_pool<pose_type>> _buffer_pool,
                bool input_texture_vulkan_coordinates_in) override {
         std::lock_guard<std::mutex> lock{m_setup};
 
@@ -124,7 +123,13 @@ public:
             partial_destroy();
         }
 
-        this->buffer_pool = std::move(buffer_pool);
+        this->buffer_pool = std::move(_buffer_pool);
+
+        if (this->buffer_pool->image_pool[0][0].image_info.format != VK_FORMAT_B8G8R8A8_UNORM) {
+            create_multiplane_sampler();
+        } else {
+            create_texture_sampler();
+        }
 
         create_descriptor_pool();
         create_descriptor_sets();
@@ -352,6 +357,40 @@ private:
 
         // Construct timewarp meshes and other data
         build_timewarp(hmd_info);
+    }
+
+    void create_multiplane_sampler() {
+        VkSamplerYcbcrConversionInfo conversion_info = {
+            VK_STRUCTURE_TYPE_SAMPLER_YCBCR_CONVERSION_INFO, // sType
+            nullptr,                                         // pNext
+            buffer_pool->ycbcr_conversion                               // conversion
+        };
+
+        VkSamplerCreateInfo samplerInfo = {VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO};
+        samplerInfo.pNext               = &conversion_info;
+        samplerInfo.magFilter = VK_FILTER_LINEAR; // how to interpolate texels that are magnified on screen
+        samplerInfo.minFilter = VK_FILTER_LINEAR;
+
+        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.borderColor  = VK_BORDER_COLOR_INT_OPAQUE_BLACK; // black outside the texture
+
+        samplerInfo.anisotropyEnable        = VK_FALSE;
+        samplerInfo.unnormalizedCoordinates = VK_FALSE;
+        samplerInfo.compareEnable           = VK_FALSE;
+        samplerInfo.compareOp               = VK_COMPARE_OP_ALWAYS;
+
+        samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+        samplerInfo.mipLodBias = 0.f;
+        samplerInfo.minLod     = 0.f;
+        samplerInfo.maxLod     = 0.f;
+
+        VK_ASSERT_SUCCESS(vkCreateSampler(ds->vk_device, &samplerInfo, nullptr, &fb_sampler))
+
+        deletion_queue.emplace([=]() {
+            vkDestroySampler(ds->vk_device, fb_sampler, nullptr);
+        });
     }
 
     void create_texture_sampler() {
@@ -786,36 +825,36 @@ private:
 
     VkDescriptorPool                            descriptor_pool{};
     VkDescriptorSetLayout                       descriptor_set_layout{};
-    std::array<std::vector<VkDescriptorSet>, 2> descriptor_sets;
 
+    std::array<std::vector<VkDescriptorSet>, 2> descriptor_sets;
     VkPipelineLayout  pipeline_layout{};
     VkBuffer          uniform_buffer{};
     VmaAllocation     uniform_alloc{};
+
     VmaAllocationInfo uniform_alloc_info{};
-
     VkCommandPool   command_pool{};
-    VkCommandBuffer command_buffer{};
 
+    VkCommandBuffer command_buffer{};
     VkBuffer vertex_buffer{};
+
     VkBuffer index_buffer{};
 
     // distortion data
     HMD::hmd_info_t hmd_info{};
-
     uint32_t                         num_distortion_vertices{};
     uint32_t                         num_distortion_indices{};
     Eigen::Matrix4f                  basicProjection;
     std::vector<HMD::mesh_coord3d_t> distortion_positions;
     std::vector<HMD::uv_coord_t>     distortion_uv0;
     std::vector<HMD::uv_coord_t>     distortion_uv1;
+
     std::vector<HMD::uv_coord_t>     distortion_uv2;
 
     std::vector<uint32_t> distortion_indices;
-
     // metrics
     std::atomic<uint32_t> num_record_calls{0};
-    std::atomic<uint32_t> num_update_uniforms_calls{0};
 
+    std::atomic<uint32_t> num_update_uniforms_calls{0};
     friend class timewarp_vk_plugin;
 };
 

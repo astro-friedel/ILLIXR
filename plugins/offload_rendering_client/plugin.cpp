@@ -47,7 +47,6 @@ public:
         ffmpeg_init_frame_ctx();
         ffmpeg_init_cuda_frame_ctx();
         ffmpeg_init_buffer_pool();
-        ffmpeg_init_filters();
         ffmpeg_init_decoder();
         ready = true;
     }
@@ -154,14 +153,14 @@ private:
 
     std::shared_ptr<vulkan::buffer_pool<pose_type>> buffer_pool;
     std::vector<std::array<ffmpeg_vk_frame, 2>>     avvkframes;
-    AVBufferRef*    device_ctx;
-    AVBufferRef*    cuda_device_ctx;
-    AVBufferRef*    frame_ctx;
-    AVBufferRef*    cuda_frame_ctx;
+    AVBufferRef*    device_ctx = nullptr;
+    AVBufferRef*    cuda_device_ctx = nullptr;
+    AVBufferRef*    frame_ctx = nullptr;
+    AVBufferRef*    cuda_frame_ctx = nullptr;
 
-    AVCodecContext* codec_ctx;
-    std::array<AVPacket*, 2>  decode_src_packets;
-    std::array<AVFrame*, 2>   decode_out_frames;
+    AVCodecContext* codec_ctx = nullptr;
+    std::array<AVPacket*, 2>  decode_src_packets = {nullptr, nullptr};
+    std::array<AVFrame*, 2>   decode_out_frames = {nullptr, nullptr};
 
     uint64_t                 frame_count = 0;
 
@@ -230,6 +229,13 @@ private:
         log->info("FFmpeg Vulkan hwdevice context initialized");
     }
 
+public:
+
+    VkFormat get_preferred_image_format() override {
+        return VK_FORMAT_G8_B8R8_2PLANE_420_UNORM;
+    }
+
+private:
     void ffmpeg_init_cuda_device() {
         auto ret = av_hwdevice_ctx_create(&cuda_device_ctx, AV_HWDEVICE_TYPE_CUDA, nullptr, nullptr, 0);
         AV_ASSERT_SUCCESS(ret);
@@ -249,12 +255,12 @@ private:
 
         auto hwframe_ctx    = reinterpret_cast<AVHWFramesContext*>(frame_ctx->data);
         hwframe_ctx->format = AV_PIX_FMT_VULKAN;
-        auto pix_format = vulkan::ffmpeg_utils::get_pix_format_from_vk_format(buffer_pool->image_pool[0][0].image_info.format);
-        if (!pix_format) {
-            throw std::runtime_error{"Unsupported Vulkan image format when creating FFmpeg Vulkan hwframe context"};
-        }
-        assert(pix_format == AV_PIX_FMT_BGRA);
-        hwframe_ctx->sw_format         = AV_PIX_FMT_BGRA;
+//        auto pix_format = vulkan::ffmpeg_utils::get_pix_format_from_vk_format(buffer_pool->image_pool[0][0].image_info.format);
+//        if (!pix_format) {
+//            throw std::runtime_error{"Unsupported Vulkan image format when creating FFmpeg Vulkan hwframe context"};
+//        }
+//        assert(pix_format == AV_PIX_FMT_NV12);
+        hwframe_ctx->sw_format         = AV_PIX_FMT_NV12;
         hwframe_ctx->width             = buffer_pool->image_pool[0][0].image_info.extent.width;
         hwframe_ctx->height            = buffer_pool->image_pool[0][0].image_info.extent.height;
         hwframe_ctx->initial_pool_size = 0;
@@ -338,56 +344,6 @@ private:
         }
     }
 
-    void ffmpeg_init_filters() {
-        const AVFilter *buffersrc  = avfilter_get_by_name("buffer");
-        const AVFilter *buffersink = avfilter_get_by_name("buffersink");
-        AVFilterInOut *outputs     = avfilter_inout_alloc();
-        AVFilterInOut *inputs      = avfilter_inout_alloc();
-        filter_graph = avfilter_graph_alloc();
-        if (!outputs || !inputs || !filter_graph) {
-            throw std::runtime_error{"Failed to allocate AVFilterInOut or AVFilterGraph"};
-        }
-
-        char args[512];
-        snprintf(args, sizeof(args),
-                 "video_size=%dx%d:pix_fmt=%d:time_base=%d/%d",
-                    buffer_pool->image_pool[0][0].image_info.extent.width, buffer_pool->image_pool[0][0].image_info.extent.height,
-                    AV_PIX_FMT_CUDA,
-                    1, 60);
-
-        auto ret = avfilter_graph_create_filter(&buffersrc_ctx, buffersrc, "in", args, nullptr, filter_graph);
-        AV_ASSERT_SUCCESS(ret);
-        ret = avfilter_graph_create_filter(&buffersink_ctx, buffersink, "out", nullptr, nullptr, filter_graph);
-        AV_ASSERT_SUCCESS(ret);
-
-        AVBufferSrcParameters *srcpar = av_buffersrc_parameters_alloc();
-        srcpar->hw_frames_ctx = av_buffer_ref(cuda_frame_ctx);
-        ret = av_buffersrc_parameters_set(buffersrc_ctx, srcpar);
-        AV_ASSERT_SUCCESS(ret);
-
-        // formats
-        enum AVPixelFormat pix_fmts[] = {AV_PIX_FMT_CUDA, AV_PIX_FMT_NONE};
-        ret = av_opt_set_int_list(buffersink_ctx, "pix_fmts", pix_fmts, AV_PIX_FMT_NONE, AV_OPT_SEARCH_CHILDREN);
-
-
-        // link
-        outputs->name       = av_strdup("in");
-        outputs->filter_ctx = buffersrc_ctx;
-        outputs->pad_idx    = 0;
-        outputs->next       = nullptr;
-
-        inputs->name       = av_strdup("out");
-        inputs->filter_ctx = buffersink_ctx;
-        inputs->pad_idx    = 0;
-        inputs->next       = nullptr;
-
-        ret = avfilter_graph_parse_ptr(filter_graph, "scale_cuda=format=rgb32", &inputs, &outputs, nullptr);
-        AV_ASSERT_SUCCESS(ret);
-
-        ret = avfilter_graph_config(filter_graph, nullptr);
-        AV_ASSERT_SUCCESS(ret);
-    }
-
     void ffmpeg_init_decoder() {
         auto decoder = avcodec_find_decoder_by_name(OFFLOAD_RENDERING_FFMPEG_DECODER_NAME);
         if (!decoder) {
@@ -426,10 +382,6 @@ private:
         auto ret = avcodec_open2(codec_ctx, decoder, nullptr);
         AV_ASSERT_SUCCESS(ret);
     }
-
-    AVFilterContext* buffersrc_ctx;
-    AVFilterContext* buffersink_ctx;
-    AVFilterGraph*   filter_graph;
 };
 
 class offload_rendering_client_loader
