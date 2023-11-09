@@ -10,6 +10,7 @@
 #include <opencv2/imgproc.hpp>
 #include <optional>
 #include <string>
+#include <spdlog/spdlog.h>
 
 //pyh for convinence I will use the combined imu_cam for scannet
 using namespace ILLIXR;
@@ -21,13 +22,13 @@ public:
 
     lazy_load_image(){}
     std::unique_ptr<cv::Mat> load() const {
-        //printf("depth image path: %s\n", _m_path.c_str());
+        spdlog::get("illixr")->info("[offline_scannet] depth image path: {}", _m_path);
         auto img = std::unique_ptr<cv::Mat>{new cv::Mat{cv::imread(_m_path, cv::IMREAD_UNCHANGED)}};
         assert(!img->empty());
         return img;
     }
    std::unique_ptr<cv::Mat> color_load() const {
-        //printf("color image path: %s\n", _m_path.c_str());
+        spdlog::get("illixr")->info("[offline_scannet] color image path: {}", _m_path);
         cv::Mat original_mat = cv::imread(_m_path, cv::IMREAD_UNCHANGED);
         cv::Mat *converted_mat = new cv::Mat(original_mat.size(), CV_8UC4, cv::Scalar(0, 0, 0, 255));
         cv::cvtColor(original_mat,*converted_mat,cv::COLOR_BGR2RGBA,0);
@@ -52,7 +53,7 @@ typedef struct {
 static std::map<ullong, sensor_types> load_data() {
     const char* illixr_data_c_str = std::getenv("ILLIXR_DATA");
     if (!illixr_data_c_str) {
-        std::cerr << "Please define ILLIXR_DATA" << std::endl;
+        spdlog::get("illixr")->error("[offline_scannet] Please define ILLIXR_DATA");
         ILLIXR::abort();
     }
     std::string illixr_data = std::string{illixr_data_c_str};
@@ -64,10 +65,9 @@ static std::map<ullong, sensor_types> load_data() {
     const std::string groundtruth_subpath = "/poses/groundtruth.txt";
     //const std::string groundtruth_subpath = "/poses/groundtruth_rgb.txt";
     std::ifstream groundtruth_file{illixr_data + groundtruth_subpath};
-    printf("groundtruth pose path: %s\n", (illixr_data+groundtruth_subpath).c_str());    
+    spdlog::get("illixr")->info("[offline_scannet] groundtruth pose path: {}", illixr_data+groundtruth_subpath);
     if (!groundtruth_file.good()) {
-        std::cerr << "${ILLIXR_DATA}" << groundtruth_subpath << " (" << illixr_data << groundtruth_subpath << ") is not a good path"
-                  << std::endl;
+        spdlog::get("illixr")->error("[offline_scannet] {} is not a good path", illixr_data+groundtruth_subpath);
         ILLIXR::abort();
     }
     ullong t;
