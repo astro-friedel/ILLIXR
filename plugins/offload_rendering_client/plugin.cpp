@@ -12,6 +12,7 @@
 extern "C" {
 #include <libavfilter/buffersink.h>
 #include <libavfilter/buffersrc.h>
+#include <libswscale/swscale.h>
 }
 
 #include <cstdlib>
@@ -108,6 +109,82 @@ protected:
         avcodec_free_context(&png_codec_ctx);
     }
 
+    void save_nv12_img_to_png(AVFrame *cuda_frame) {
+        auto cpu_av_frame    = av_frame_alloc();
+        cpu_av_frame->format = AV_PIX_FMT_NV12;
+        auto ret             = av_hwframe_transfer_data(cpu_av_frame, cuda_frame, 0);
+        AV_ASSERT_SUCCESS(ret);
+
+        AVFrame* frameGRB = av_frame_alloc();
+        frameGRB->width = cpu_av_frame->width;
+        frameGRB->height= cpu_av_frame->height;
+        frameGRB->format = AV_PIX_FMT_RGBA;
+        av_frame_get_buffer(frameGRB, 0);
+
+        SwsContext *sws_context = sws_getContext(cpu_av_frame->width, cpu_av_frame->height, AV_PIX_FMT_NV12, frameGRB->width, frameGRB->height, AV_PIX_FMT_RGBA, SWS_BICUBIC, NULL, NULL, NULL);
+        if (sws_context != NULL){
+            sws_scale(sws_context, cpu_av_frame->data, cpu_av_frame->linesize, 0, cpu_av_frame->height, frameGRB->data, frameGRB->linesize);
+        }
+
+        // save cpu_av_frame as png
+        auto png_codec           = avcodec_find_encoder(AV_CODEC_ID_PNG);
+        auto png_codec_ctx       = avcodec_alloc_context3(png_codec);
+        png_codec_ctx->pix_fmt   = AV_PIX_FMT_RGBA;
+        png_codec_ctx->width     = cpu_av_frame->width;
+        png_codec_ctx->height    = cpu_av_frame->height;
+        png_codec_ctx->time_base = {1, 60};
+        png_codec_ctx->framerate = {60, 1};
+
+        ret = avcodec_open2(png_codec_ctx, png_codec, nullptr);
+        AV_ASSERT_SUCCESS(ret);
+        AVPacket* png_packet = av_packet_alloc();
+        ret                  = avcodec_send_frame(png_codec_ctx, frameGRB);
+        AV_ASSERT_SUCCESS(ret);
+        ret = avcodec_receive_packet(png_codec_ctx, png_packet);
+        AV_ASSERT_SUCCESS(ret);
+
+        std::string filename = "frame_" + std::to_string(frame_count) + ".png";
+        FILE*       f        = fopen(filename.c_str(), "wb");
+        fwrite(png_packet->data, 1, png_packet->size, f);
+        fclose(f);
+
+        av_packet_free(&png_packet);
+        av_frame_free(&cpu_av_frame);
+        avcodec_free_context(&png_codec_ctx);
+    }
+
+    void layout_transition(VkCommandBuffer cmd_buf, VkImage image, VkImageLayout old_layout, VkImageLayout new_layout) {
+        VkImageMemoryBarrier barrier = {};
+        barrier.sType               = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        barrier.oldLayout           = old_layout;
+        barrier.newLayout           = new_layout;
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.image               = image;
+        barrier.subresourceRange    = {VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1};
+
+        VkPipelineStageFlags src_stage;
+        VkPipelineStageFlags dst_stage;
+
+        if ((old_layout == VK_IMAGE_LAYOUT_UNDEFINED || old_layout == VK_IMAGE_LAYOUT_GENERAL) && new_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+            barrier.srcAccessMask = 0;
+            barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+            src_stage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+            dst_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        } else if (old_layout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && new_layout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+            barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+            src_stage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+            dst_stage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        } else {
+            throw std::invalid_argument("unsupported layout transition");
+        }
+
+        vkCmdPipelineBarrier(cmd_buf, src_stage, dst_stage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+    }
+
     void _p_one_iteration() override {
         if (!ready) {
             return;
@@ -129,17 +206,33 @@ protected:
 
         auto ind = buffer_pool->src_acquire_image();
 
+//        auto cmd = vulkan::begin_one_time_command(dp->vk_device, dp->command_pool);
         for (auto eye = 0; eye < 2; eye++) {
             auto ret = avcodec_receive_frame(codec_ctx, decode_out_frames[eye]);
             assert(decode_out_frames[eye]->format == AV_PIX_FMT_CUDA);
+
+            auto cpu_av_frame    = av_frame_alloc();
+            cpu_av_frame->format = AV_PIX_FMT_NV12;
+            ret             = av_hwframe_transfer_data(cpu_av_frame, decode_out_frames[eye], 0);
+
+            ret = av_hwframe_transfer_data(avvkframes[ind][eye].frame, cpu_av_frame, 0);
             AV_ASSERT_SUCCESS(ret);
-//            copy_image_to_cpu_and_save_file(decode_out_frames[eye]);
-//            ret = av_hwframe_transfer_data(avvkframes[ind][eye].frame, decode_out_frames[eye], 0);
-//            AV_ASSERT_SUCCESS(ret);
 //            vulkan::wait_timeline_semaphore(dp->vk_device, avvkframes[ind][eye].vk_frame->sem[0],
 //                                                          avvkframes[ind][eye].vk_frame->sem_value[0]);
+//            vulkan::wait_timeline_semaphore(dp->vk_device, avvkframes[ind][eye].vk_frame->sem[1],
+//                                                          avvkframes[ind][eye].vk_frame->sem_value[1]);
+
+//            layout_transition(cmd, avvkframes[ind][eye].vk_frame->img[0], avvkframes[ind][eye].vk_frame->layout[0], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+            // generate random bool with 0.9 true
+//            bool save = (rand() % 10) < 2;
+//            if (save) {
+//                save_nv12_img_to_png(avvkframes[ind][eye].frame);
+//            }
             decode_out_frames[eye]->pts = frame_count++;
         }
+//        vulkan::end_one_time_command(dp->vk_device, dp->command_pool, dp->queues[vulkan::queue::GRAPHICS].vk_queue, cmd);
+
         buffer_pool->src_release_image(ind, std::move(pose));
         // log->info("Sending frame {}", frame_count);
     }
@@ -295,12 +388,23 @@ private:
                 if (!vk_frame) {
                     throw std::runtime_error{"Failed to allocate FFmpeg Vulkan frame"};
                 }
+
+                auto& img = buffer_pool->image_pool[i][eye];
+
+                VkImageSubresource imageSubres = {};
+                VkSubresourceLayout subresLayout0, subresLayout1;
+                imageSubres.aspectMask = VK_IMAGE_ASPECT_PLANE_0_BIT;
+                vkGetImageSubresourceLayout(dp->vk_device, img.image, &imageSubres, &subresLayout0);
+                imageSubres.aspectMask = VK_IMAGE_ASPECT_PLANE_1_BIT;
+                vkGetImageSubresourceLayout(dp->vk_device, img.image, &imageSubres, &subresLayout1);
+
                 // The image index is just 0 here for AVVKFrame since we're not using multi-plane
-                vk_frame->img[0]          = buffer_pool->image_pool[i][eye].image;
-                vk_frame->tiling          = buffer_pool->image_pool[i][eye].image_info.tiling;
-                vk_frame->mem[0]          = buffer_pool->image_pool[i][eye].allocation_info.deviceMemory;
-                vk_frame->size[0]         = buffer_pool->image_pool[i][eye].allocation_info.size;
-                vk_frame->offset[0]       = buffer_pool->image_pool[i][eye].allocation_info.offset;
+                vk_frame->tiling          = img.image_info.tiling;
+
+                vk_frame->img[0]          = img.image;
+                vk_frame->mem[0]          = img.allocation_info.deviceMemory;
+                vk_frame->size[0]         = subresLayout0.size;
+                vk_frame->offset[0]       = subresLayout0.offset;
                 vk_frame->queue_family[0] = dp->queues[vulkan::queue::GRAPHICS].family;
 
                 VkExportSemaphoreCreateInfo export_semaphore_create_info{
@@ -310,6 +414,17 @@ private:
                 vk_frame->sem_value[0] = 0;
                 vk_frame->layout[0]    = VK_IMAGE_LAYOUT_UNDEFINED;
 
+                vk_frame->img[1]          = img.image;
+                vk_frame->mem[1]          = img.allocation_info.deviceMemory;
+                vk_frame->size[1]         = subresLayout1.size;
+                vk_frame->offset[1]       = 0;
+                vk_frame->queue_family[1] = dp->queues[vulkan::queue::GRAPHICS].family;
+
+                vk_frame->sem[1] =
+                    vulkan::create_timeline_semaphore(dp->vk_device, 0, &export_semaphore_create_info);
+                vk_frame->sem_value[1] = 0;
+                vk_frame->layout[1]    = VK_IMAGE_LAYOUT_UNDEFINED;
+
                 avvkframes[i][eye].vk_frame = vk_frame;
 
                 // Create AVFrame
@@ -318,8 +433,8 @@ private:
                     throw std::runtime_error{"Failed to allocate FFmpeg frame"};
                 }
                 av_frame->format        = AV_PIX_FMT_VULKAN;
-                av_frame->width         = buffer_pool->image_pool[i][eye].image_info.extent.width;
-                av_frame->height        = buffer_pool->image_pool[i][eye].image_info.extent.height;
+                av_frame->width         = img.image_info.extent.width;
+                av_frame->height        = img.image_info.extent.height;
                 av_frame->hw_frames_ctx = av_buffer_ref(frame_ctx);
                 av_frame->data[0]       = reinterpret_cast<uint8_t*>(vk_frame);
                 av_frame->buf[0]        = av_buffer_create(

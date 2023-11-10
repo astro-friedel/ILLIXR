@@ -155,7 +155,7 @@ public:
         auto message    = msg.message;
         auto message_size = message.size();
 
-        log->debug("Received message on topic {} with size {} ({}) with chksm {}", topic_name, received_size, message_size, msg.checksum);
+//        log->debug("Received message on topic {} with size {} ({}) with chksm {}", topic_name, received_size, message_size, msg.checksum);
 
         topic_receive(topic_name, message);
     }

@@ -106,8 +106,6 @@ public:
             std::lock_guard<std::mutex> lock{*ds->queues[ILLIXR::vulkan::queue::GRAPHICS].mutex};
             create_vertex_buffer();
             create_index_buffer();
-            create_descriptor_set_layout();
-            create_uniform_buffer();
         }
     }
 
@@ -125,11 +123,15 @@ public:
 
         this->buffer_pool = std::move(_buffer_pool);
 
-        if (this->buffer_pool->image_pool[0][0].image_info.format != VK_FORMAT_B8G8R8A8_UNORM) {
+        if (this->buffer_pool->multi_plane) {
             create_multiplane_sampler();
         } else {
             create_texture_sampler();
         }
+        create_descriptor_set_layout();
+
+        std::lock_guard<std::mutex> lock2{*ds->queues[ILLIXR::vulkan::queue::GRAPHICS].mutex};
+        create_uniform_buffer();
 
         create_descriptor_pool();
         create_descriptor_sets();
@@ -451,6 +453,7 @@ private:
         samplerLayoutBinding.descriptorType               = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         samplerLayoutBinding.descriptorCount              = 1;
         samplerLayoutBinding.stageFlags                   = VK_SHADER_STAGE_FRAGMENT_BIT;
+        samplerLayoutBinding.pImmutableSamplers = buffer_pool->multi_plane ? &fb_sampler : nullptr;
 
         std::array<VkDescriptorSetLayoutBinding, 2> bindings   = {uboLayoutBinding, samplerLayoutBinding};
         VkDescriptorSetLayoutCreateInfo             layoutInfo = {};

@@ -57,5 +57,8 @@ public:
     VkPhysicalDeviceFeatures2 features;
     std::vector<const char*>  enabled_instance_extensions;
     std::vector<const char*>  enabled_device_extensions;
+
+    VkCommandPool command_pool;
+
 };
 } // namespace ILLIXR::vulkan

@@ -51,9 +51,12 @@ public:
         buffer_pool->depth_image_pool.resize(NATIVE_RENDERER_BUFFER_POOL_SIZE);
         buffer_pool->image_pool.resize(NATIVE_RENDERER_BUFFER_POOL_SIZE);
 
-        if (tw->is_external() || src->is_external()) {
-            create_offscreen_pool();
+        if (get_offscreen_pool_format() != VK_FORMAT_B8G8R8A8_UNORM) {
+            this->buffer_pool->multi_plane = true;
+            create_multi_plane_conversion();
         }
+        create_offscreen_pool();
+
         for (auto i = 0; i < NATIVE_RENDERER_BUFFER_POOL_SIZE; i++) {
             for (auto eye = 0; eye < 2; eye++) {
                 create_offscreen_target(buffer_pool->image_pool[i][eye]);
@@ -62,7 +65,7 @@ public:
         }
         this->buffer_pool->resize();
 
-        command_pool            = vulkan::create_command_pool(ds->vk_device, ds->queues[vulkan::queue::GRAPHICS].family);
+        command_pool            = ds->command_pool;
         app_command_buffer      = vulkan::create_command_buffer(ds->vk_device, command_pool);
         timewarp_command_buffer = vulkan::create_command_buffer(ds->vk_device, command_pool);
         create_sync_objects();
@@ -496,16 +499,12 @@ private:
     void create_offscreen_pool() {
         auto fmt = get_offscreen_pool_format();
 
-        if (fmt != VK_FORMAT_B8G8R8A8_UNORM) {
-            create_multi_plane_conversion();
-        }
-
         VkImageCreateInfo sample_create_info{
             VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO, // sType
             nullptr,                             // pNext
             0,                                   // flags
             VK_IMAGE_TYPE_2D,                    // imageType
-            fmt,            // format
+            fmt,                                 // format
             {
                 ds->swapchain_extent.width / 2, // width
                 ds->swapchain_extent.height,    // height
@@ -544,19 +543,20 @@ private:
     void create_multi_plane_conversion() {
         VkSamplerYcbcrConversionCreateInfo conversion_create_info = {
             VK_STRUCTURE_TYPE_SAMPLER_YCBCR_CONVERSION_CREATE_INFO, // sType
-            nullptr,                                                 // pNext
-            get_offscreen_pool_format(),         // format
-            VK_SAMPLER_YCBCR_MODEL_CONVERSION_YCBCR_2020,          // ycbcrModel
+            nullptr,                                                // pNext
+            get_offscreen_pool_format(),                            // format
+            VK_SAMPLER_YCBCR_MODEL_CONVERSION_YCBCR_2020,           // ycbcrModel
             VK_SAMPLER_YCBCR_RANGE_ITU_FULL,                        // ycbcrRange
             {VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY, VK_COMPONENT_SWIZZLE_IDENTITY,
              VK_COMPONENT_SWIZZLE_IDENTITY}, // components
-            VK_CHROMA_LOCATION_COSITED_EVEN,  // xChromaOffset
-            VK_CHROMA_LOCATION_COSITED_EVEN,  // yChromaOffset
-            VK_FILTER_NEAREST,                 // chromaFilter
-            VK_FALSE,                          // forceExplicitReconstruction
+            VK_CHROMA_LOCATION_COSITED_EVEN, // xChromaOffset
+            VK_CHROMA_LOCATION_COSITED_EVEN, // yChromaOffset
+            VK_FILTER_NEAREST,               // chromaFilter
+            VK_FALSE,                        // forceExplicitReconstruction
         };
 
-        VK_ASSERT_SUCCESS(vkCreateSamplerYcbcrConversion(ds->vk_device, &conversion_create_info, nullptr, &buffer_pool->ycbcr_conversion))
+        VK_ASSERT_SUCCESS(
+            vkCreateSamplerYcbcrConversion(ds->vk_device, &conversion_create_info, nullptr, &buffer_pool->ycbcr_conversion))
     }
 
     /**
@@ -588,7 +588,7 @@ private:
             (src->is_external() || tw->is_external()) ? &image.export_image_info : nullptr, // pNext
             0,                                                                              // flags
             VK_IMAGE_TYPE_2D,                                                               // imageType
-            fmt,                                                       // format
+            fmt,                                                                            // format
             {
                 ds->swapchain_extent.width / 2, // width
                 ds->swapchain_extent.height,    // height
@@ -607,13 +607,17 @@ private:
             VK_IMAGE_LAYOUT_UNDEFINED                                                                // initialLayout
         };
 
-        VmaAllocationCreateInfo alloc_info{.usage = VMA_MEMORY_USAGE_GPU_ONLY};
-        if (tw->is_external() || src->is_external()) {
-            alloc_info.pool = offscreen_pool;
-        }
+        if (!buffer_pool->multi_plane) {
+            VmaAllocationCreateInfo alloc_info{.usage = VMA_MEMORY_USAGE_GPU_ONLY};
+            if (tw->is_external() || src->is_external()) {
+                alloc_info.pool = offscreen_pool;
+            }
 
-        VK_ASSERT_SUCCESS(vmaCreateImage(ds->vma_allocator, &image.image_info, &alloc_info, &image.image, &image.allocation,
-                                         &image.allocation_info))
+            VK_ASSERT_SUCCESS(vmaCreateImage(ds->vma_allocator, &image.image_info, &alloc_info, &image.image, &image.allocation,
+                                             &image.allocation_info))
+        } else {
+
+        }
 
         assert(image.allocation_info.deviceMemory);
 
@@ -624,13 +628,13 @@ private:
         };
 
         VkImageViewCreateInfo view_info{
-            VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO, // sType
-            buffer_pool->ycbcr_conversion ? &conversion_info : nullptr,                                  // pNext
-            0,                                        // flags
-            image.image,                              // image
-            VK_IMAGE_VIEW_TYPE_2D,                    // viewType
-            get_offscreen_pool_format(),                 // format
-            {},                                       // components
+            VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,                   // sType
+            buffer_pool->ycbcr_conversion ? &conversion_info : nullptr, // pNext
+            0,                                                          // flags
+            image.image,                                                // image
+            VK_IMAGE_VIEW_TYPE_2D,                                      // viewType
+            get_offscreen_pool_format(),                                // format
+            {},                                                         // components
             {
                 VK_IMAGE_ASPECT_COLOR_BIT, // aspectMask
                 0,                         // baseMipLevel
@@ -651,7 +655,8 @@ private:
 
         for (auto i = 0; i < NATIVE_RENDERER_BUFFER_POOL_SIZE; i++) {
             for (auto eye = 0; eye < 2; eye++) {
-                std::array<VkImageView, 2> attachments = {buffer_pool->image_pool[i][eye].image_view, buffer_pool->depth_image_pool[i][eye].image_view};
+                std::array<VkImageView, 2> attachments = {buffer_pool->image_pool[i][eye].image_view,
+                                                          buffer_pool->depth_image_pool[i][eye].image_view};
 
                 assert(app_pass != VK_NULL_HANDLE);
                 VkFramebufferCreateInfo framebuffer_info{
@@ -817,7 +822,7 @@ private:
                  VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,                                                       // srcStageMask
                  src->is_external() ? VK_PIPELINE_STAGE_TRANSFER_BIT : VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, // dstStageMask
                  VK_ACCESS_SHADER_READ_BIT,                                                                   // srcAccessMask
-                 src->is_external() ? VK_ACCESS_TRANSFER_WRITE_BIT : VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,    // dstAccessMask
+                 src->is_external() ? VK_ACCESS_TRANSFER_WRITE_BIT : VK_ACCESS_SHADER_READ_BIT,    // dstAccessMask
                  VK_DEPENDENCY_BY_REGION_BIT                                                                  // dependencyFlags
              }}};
 
@@ -867,6 +872,6 @@ private:
     int        fps{};
     time_point last_fps_update;
     switchboard::reader<switchboard::event_wrapper<time_point>> _m_vsync;
-    std::shared_ptr<vulkan::buffer_pool<pose_type>>             buffer_pool = std::make_shared<vulkan::buffer_pool<pose_type>>();
+    std::shared_ptr<vulkan::buffer_pool<pose_type>> buffer_pool = std::make_shared<vulkan::buffer_pool<pose_type>>();
 };
 PLUGIN_MAIN(native_renderer)

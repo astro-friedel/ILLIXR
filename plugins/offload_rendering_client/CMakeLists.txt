@@ -15,7 +15,7 @@ endif()
 # ffmpeg
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(LIBAV REQUIRED IMPORTED_TARGET
-        libavdevice libavformat libavcodec libavutil)
+        libavdevice libavformat libavcodec libavutil libswscale)
 
 add_library(${PLUGIN_NAME} SHARED plugin.cpp
         ../../include/illixr/data_format.hpp

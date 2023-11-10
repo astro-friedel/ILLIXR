@@ -12,8 +12,8 @@ struct vk_image {
     VkExternalMemoryImageCreateInfo export_image_info;
     VkImage image;
     VkImageView image_view;
-    VmaAllocation allocation;
-    VmaAllocationInfo allocation_info;
+    std::vector<VmaAllocation> allocation;
+    std::vector<VmaAllocationInfo> allocation_info;
 };
 
 template <typename T>
@@ -31,6 +31,7 @@ struct buffer_pool {
     std::vector<T> image_data;
     std::mutex image_state_mutex;
 
+    bool multi_plane = false;
     VkSamplerYcbcrConversion ycbcr_conversion = VK_NULL_HANDLE;
 
     image_index_t latest_decoded_image = -1;

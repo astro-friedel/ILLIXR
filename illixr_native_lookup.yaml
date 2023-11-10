@@ -1,0 +1,8 @@
+plugins: pose_lookup,timewarp_vk,vkdemo,native_renderer
+data: /home/steven/Documents/ILLIXR/data/mav0
+demo_data: /home/steven/Documents/ILLIXR/demo_data
+install_prefix: /home/steven/Documents/ILLIXR/clion-build/install
+enable_offload: false
+enable_alignment: false
+enable_verbose_errors: false
+enable_pre_sleep: false

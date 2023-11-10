@@ -77,6 +77,8 @@ public:
         create_logical_device(std::move(device_extensions));
 
         create_swapchain();
+
+        command_pool            = vulkan::create_command_pool(vk_device, queues[vulkan::queue::GRAPHICS].family);
     }
 
     /**
