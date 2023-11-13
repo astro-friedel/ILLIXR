@@ -13,6 +13,10 @@
 
 namespace ILLIXR {
 
+namespace FD {
+    const static size_t BUFFER_SIZE = 1024 * 1024;
+}
+
 /* Unix file descriptors (sockets, files, etc.) */
 class FileDescriptor {
 private:
@@ -35,7 +39,6 @@ protected:
     }
 
     /* maximum size of a read */
-    const static size_t BUFFER_SIZE = 1024 * 1024;
 
 public:
     /* construct from fd number */
@@ -94,10 +97,10 @@ public:
     }
 
     /* read and write methods */
-    std::string read(const size_t limit = BUFFER_SIZE) {
-        char buffer[BUFFER_SIZE];
+    std::string read(const size_t limit = FD::BUFFER_SIZE) {
+        char buffer[FD::BUFFER_SIZE];
 
-        ssize_t bytes_read = system_call("read", ::read(fd_, buffer, std::min(BUFFER_SIZE, limit)));
+        ssize_t bytes_read = system_call("read", ::read(fd_, buffer, std::min(FD::BUFFER_SIZE, limit)));
         if (bytes_read == 0) {
             set_eof();
         }

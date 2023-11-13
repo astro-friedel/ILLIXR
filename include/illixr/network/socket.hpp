@@ -245,7 +245,7 @@ public:
     }
 
     std::string recv_non_blocking() {
-        char        buffer[FileDescriptor::BUFFER_SIZE];
+        char        buffer[ILLIXR::FD::BUFFER_SIZE];
         std::string result    = "";
         int         recv_size = recv(fd_num(), buffer, sizeof(buffer), 0);
         if (recv_size > 0) {
