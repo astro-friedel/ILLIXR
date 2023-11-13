@@ -8,6 +8,7 @@ set(PLUGIN_NAME plugin.offload_vio.server_rx${ILLIXR_BUILD_SUFFIX})
 
 # source files, listed individually so that any changes will trigger a rebuild
 add_library(${PLUGIN_NAME} SHARED plugin.cpp
+        plugin.hpp
         video_decoder.cpp
         video_decoder.h
         ../../../include/illixr/plugin.hpp
@@ -53,7 +54,7 @@ include_directories(
 target_link_libraries(${PLUGIN_NAME} PUBLIC ${GST_APP_LIBRARIES} ${GST_VIDEO_LIBRARIES} ${GST_AUDIO_LIBRARIES})
 
 if(BUILD_TESTS)
-    add_test(${PLUGIN_NAME})
+    add_illixr_test(${PLUGIN_NAME})
 endif()
 
 install(TARGETS ${PLUGIN_NAME} DESTINATION lib)

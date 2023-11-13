@@ -10,6 +10,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(FullVulkan COMPONENTS glslc)
 
 add_library(${PLUGIN_NAME} SHARED plugin.cpp
+        plugin.hpp
         ../../include/illixr/global_module_defs.hpp
         ../../include/illixr/pose_prediction.hpp
         ../../include/illixr/switchboard.hpp
@@ -25,8 +26,7 @@ target_link_libraries(${PLUGIN_NAME} PUBLIC ${Vulkan_LIBRARIES} spdlog::spdlog)
 target_include_directories(${PLUGIN_NAME} PUBLIC ${Vulkan_INCLUDE_DIRS} ${ILLIXR_SOURCE_DIR}/include)
 
 if(BUILD_TESTS)
-    add_test(${PLUGIN_NAME})
-    add_dependencies(test_${PLUGIN_NAME} mock_app mock_display mock_timewarp_vk mock_pose)
+    add_illixr_test(${PLUGIN_NAME} mock_app;mock_display;mock_timewarp_vk;mock_pose)
 endif()
 
 install(TARGETS ${PLUGIN_NAME} DESTINATION lib)

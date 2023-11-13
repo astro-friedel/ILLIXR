@@ -33,6 +33,7 @@ add_custom_target(
 )
 
 add_library(${PLUGIN_NAME} SHARED plugin.cpp
+        plugin.hpp
         ../../include/illixr/data_format.hpp
         ../../include/illixr/global_module_defs.hpp
         ../../include/illixr/math_util.hpp
@@ -54,8 +55,7 @@ target_include_directories(${PLUGIN_NAME} PUBLIC ${Vulkan_INCLUDE_DIRS} ${ILLIXR
 install_shaders(SPIRV_BINARY_FILES vkdemo ${PLUGIN_NAME})
 
 if(BUILD_TESTS)
-    add_test(${PLUGIN_NAME})
-    add_dependencies(test_${PLUGIN_NAME} mock_display)
+    add_illixr_test(${PLUGIN_NAME} mock_display)
 endif()
 
 install(TARGETS ${PLUGIN_NAME} DESTINATION lib)

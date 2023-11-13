@@ -16,6 +16,7 @@ find_package(CUDA ${ZED_CUDA_VERSION} EXACT REQUIRED)
 set(SRC_FILES plugin.cpp)
 set(HDR_FILES include/zed_opencv.hpp
 		../../include/illixr/opencv_data_types.hpp
+	    plugin.hpp
 		)
 
 SET(ZED_LIBS ${ZED_LIBRARIES} ${CUDA_CUDA_LIBRARY} ${CUDA_CUDART_LIBRARY})
@@ -31,7 +32,7 @@ target_link_libraries(${PLUGIN_NAME} PUBLIC ${ZED_LIBS} ${OpenCV_LIBRARIES} ${Ei
 target_compile_features(${PLUGIN_NAME} PRIVATE cxx_std_17)
 
 if(BUILD_TESTS)
-	add_test(${PLUGIN_NAME})
+	add_illixr_test(${PLUGIN_NAME})
 endif()
 
 install(TARGETS ${PLUGIN_NAME} DESTINATION lib)

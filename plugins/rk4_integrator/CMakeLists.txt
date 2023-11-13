@@ -4,6 +4,7 @@ set(PLUGIN_NAME plugin.rk4_integrator${ILLIXR_BUILD_SUFFIX})
 
 # source files, listed individually so that any changes will trigger a rebuild
 add_library(${PLUGIN_NAME} SHARED plugin.cpp
+        plugin.hpp
         ../../include/illixr/plugin.hpp
         ../../include/illixr/data_format.hpp
         ../../include/illixr/switchboard.hpp
@@ -14,7 +15,7 @@ target_link_libraries(${PLUGIN_NAME} PUBLIC ${Eigen3_LIBRARIES})
 target_compile_features(${PLUGIN_NAME} PRIVATE cxx_std_17)
 
 if(BUILD_TESTS)
-    add_test(${PLUGIN_NAME})
+    add_illixr_test(${PLUGIN_NAME})
 endif()
 
 install(TARGETS ${PLUGIN_NAME} DESTINATION lib)

@@ -37,6 +37,7 @@ add_custom_target(
 )
 
 add_library(${PLUGIN_NAME} SHARED plugin.cpp
+        plugin.hpp
         third_party/VkBootstrap.cpp
         ../../include/illixr/vk_util/third_party/VkBootstrap.h
         ../../include/illixr/vk_util/third_party/VkBootstrapDispatch.h
@@ -63,7 +64,7 @@ add_custom_command(TARGET ${PLUGIN_NAME} POST_BUILD
         )
 
 if(BUILD_TESTS)
-    add_test(${PLUGIN_NAME})
+    add_illixr_test(${PLUGIN_NAME})
 endif()
 
 install(TARGETS ${PLUGIN_NAME} DESTINATION lib)

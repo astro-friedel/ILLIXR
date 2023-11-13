@@ -6,6 +6,7 @@ set(PLUGIN_NAME plugin.depthai${ILLIXR_BUILD_SUFFIX})
 
 # source files, listed individually so that any changes will trigger a rebuild
 add_library(${PLUGIN_NAME} SHARED plugin.cpp
+        plugin.hpp
         ../../include/illixr/data_format.hpp
         ../../include/illixr/opencv_data_types.hpp
         ../../include/illixr/relative_clock.hpp
@@ -18,21 +19,26 @@ add_definitions(-Wno-format-extra-args)
 if(BUILD_OPENCV)
     add_dependencies(${PLUGIN_NAME} OpenCV_Viz)
 endif()
-
+message("----- ${depthai_FOUND}   ${DepthAI_INCLUDE_DIRS}")
 target_include_directories(${PLUGIN_NAME} PUBLIC ${DepthAI_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS} ${ILLIXR_SOURCE_DIR}/include)
 
 # if we are building DepthAI from source
 if(DepthAI_EXTERNAL)
     add_dependencies(${PLUGIN_NAME} DepthAI_ext)
-    target_link_libraries(${PLUGIN_NAME} PUBLIC ${DEPENDENCIES} ${OpenCV_LIBRARIES} PRIVATE ${DepthAI_LIBRARIES} spdlog::spdlog)
+    target_link_libraries(${PLUGIN_NAME} PUBLIC ${DEPENDENCIES} ${OpenCV_LIBRARIES} ${DepthAI_LIBRARIES} spdlog::spdlog)
 else()  # DepthAI already installed
-    target_link_libraries(${PLUGIN_NAME} PUBLIC ${DEPENDENCIES} ${OpenCV_LIBRARIES} PRIVATE depthai::core)
+    target_link_libraries(${PLUGIN_NAME} PUBLIC ${DEPENDENCIES} ${OpenCV_LIBRARIES} depthai::core)
 endif()
 
 target_compile_features(${PLUGIN_NAME} PRIVATE cxx_std_17)
 
 if(BUILD_TESTS)
-    add_test(${PLUGIN_NAME})
+    add_illixr_test(${PLUGIN_NAME})
 endif()
 
 install(TARGETS ${PLUGIN_NAME} DESTINATION lib)
+
+#get_cmake_property(_variableNames VARIABLES)
+#foreach (_variableName ${_variableNames})
+#    message(STATUS "${_variableName}=${${_variableName}}")
+#endforeach()

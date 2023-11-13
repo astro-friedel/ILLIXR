@@ -4,6 +4,7 @@ set(PLUGIN_NAME plugin.offline_cam${ILLIXR_BUILD_SUFFIX})
 
 # source files, listed individually so that any changes will trigger a rebuild
 add_library(${PLUGIN_NAME} SHARED plugin.cpp
+        plugin.hpp
         data_loading.hpp
         ../../include/illixr/plugin.hpp
         ../../include/illixr/opencv_data_types.hpp
@@ -25,7 +26,7 @@ target_link_libraries(${PLUGIN_NAME} PUBLIC ${OpenCV_LIBRARIES} ${Eigen3_LIBRARI
 target_compile_features(${PLUGIN_NAME} PRIVATE cxx_std_17)
 
 if(BUILD_TESTS)
-    add_test(${PLUGIN_NAME})
+    add_illixr_test(${PLUGIN_NAME})
 endif()
 
 install(TARGETS ${PLUGIN_NAME} DESTINATION lib)

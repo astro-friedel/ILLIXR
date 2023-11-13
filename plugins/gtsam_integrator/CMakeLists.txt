@@ -4,6 +4,7 @@ set(PLUGIN_NAME plugin.gtsam_integrator${ILLIXR_BUILD_SUFFIX})
 
 # source files, listed individually so that any changes will trigger a rebuild
 add_library(${PLUGIN_NAME} SHARED plugin.cpp
+        plugin.hpp
         ../../include/illixr/plugin.hpp
         ../../include/illixr/data_format.hpp
         ../../include/illixr/switchboard.hpp
@@ -19,7 +20,7 @@ target_include_directories(${PLUGIN_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${G
 target_link_libraries(${PLUGIN_NAME} PUBLIC ${GTSAM_LIBRARIES} ${Eigen3_LIBRARIES} spdlog::spdlog)
 
 if(BUILD_TESTS)
-    add_test(${PLUGIN_NAME})
+    add_illixr_test(${PLUGIN_NAME})
 endif()
 
 install(TARGETS ${PLUGIN_NAME} DESTINATION lib)

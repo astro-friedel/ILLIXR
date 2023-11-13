@@ -8,6 +8,7 @@ set(PLUGIN_NAME plugin.offload_vio.device_tx${ILLIXR_BUILD_SUFFIX})
 
 # source files, listed individually so that any changes will trigger a rebuild
 add_library(${PLUGIN_NAME} SHARED plugin.cpp
+        plugin.hpp
         video_encoder.cpp
         video_encoder.h
         ../../../include/illixr/plugin.hpp
@@ -51,12 +52,7 @@ target_link_libraries(${PLUGIN_NAME} PUBLIC ${GST_APP_LIBRARIES} ${GST_VIDEO_LIB
 target_compile_features(${PLUGIN_NAME} PRIVATE cxx_std_17)
 
 if(BUILD_TESTS)
-    add_test(${PLUGIN_NAME})
+    add_illixr_test(${PLUGIN_NAME})
 endif()
 
 install(TARGETS ${PLUGIN_NAME} DESTINATION lib)
-
-get_cmake_property(_variableNames VARIABLES)
-foreach (_variableName ${_variableNames})
-    message(STATUS "${_variableName}=${${_variableName}}")
-endforeach()

@@ -4,6 +4,7 @@ set(PLUGIN_NAME plugin.offline_imu${ILLIXR_BUILD_SUFFIX})
 
 # source files, listed individually so that any changes will trigger a rebuild
 add_library(${PLUGIN_NAME} SHARED plugin.cpp
+        plugin.hpp
         data_loading.hpp
         ../../include/illixr/data_format.hpp
         ../../include/illixr/managed_thread.hpp
@@ -19,7 +20,7 @@ target_include_directories(${PLUGIN_NAME} PUBLIC ${ILLIXR_SOURCE_DIR}/include ${
 target_link_libraries(${PLUGIN_NAME} PUBLIC ${Eigne3_LIBRARIES} spdlog::spdlog)
 
 if(BUILD_TESTS)
-    add_test(${PLUGIN_NAME})
+    add_illixr_test(${PLUGIN_NAME})
 endif()
 
 install(TARGETS ${PLUGIN_NAME} DESTINATION lib)

@@ -10,6 +10,7 @@ set(PLUGIN_NAME plugin.timewarp_gl${ILLIXR_BUILD_SUFFIX})
 
 # source files, listed individually so that any changes will trigger a rebuild
 add_library(${PLUGIN_NAME} SHARED plugin.cpp
+        plugin.hpp
         shaders/basic_shader.hpp
         shaders/timewarp_shader.hpp
         utils/hmd.cpp
@@ -31,8 +32,7 @@ target_compile_features(${PLUGIN_NAME} PRIVATE cxx_std_17)
 target_compile_definitions(${PLUGIN_NAME} PRIVATE -DUSE_GL)
 
 if(BUILD_TESTS)
-    add_test(${PLUGIN_NAME})
-    add_dependencies(test_${PLUGIN_NAME} mock_pose)
+    add_illixr_test(${PLUGIN_NAME} mock_pose)
 endif()
 
 install(TARGETS ${PLUGIN_NAME} DESTINATION lib)

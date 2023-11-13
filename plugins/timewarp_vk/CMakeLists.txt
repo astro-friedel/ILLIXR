@@ -36,6 +36,7 @@ add_custom_target(
 )
 
 add_library(${PLUGIN_NAME} SHARED plugin.cpp
+        plugin.hpp
         utils/hmd.cpp
         utils/hmd.hpp
         ../../include/illixr/data_format.hpp
@@ -61,8 +62,7 @@ target_include_directories(${PLUGIN_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${I
 install_shaders(SPIRV_BINARY_FILES timewarp_vk ${PLUGIN_NAME})
 
 if(BUILD_TESTS)
-    add_test(${PLUGIN_NAME})
-    add_dependencies(test_${PLUGIN_NAME} mock_pose mock_display)
+    add_illixr_test(${PLUGIN_NAME} mock_pose;mock_display)
 endif()
 
 install(TARGETS ${PLUGIN_NAME} DESTINATION lib)
