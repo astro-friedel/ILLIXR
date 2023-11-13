@@ -12,6 +12,10 @@ endif()
 
 if(depthai_FOUND)
     set(DepthAI_VERSION "${depthai_VERSION}" PARENT_SCOPE)   # set current version
+    if(DEFINED depthai_INCLUDE_DIRS)
+        set(DepthAI_INCLUDE_DIRS ${depthai_INCLUDE_DIRS})
+    endif()
+    MESSAGE("found depthai ${DepthAI_INCLUDE_DIRS}")
 else()
     EXTERNALPROJECT_ADD(DepthAI_ext
             GIT_REPOSITORY https://github.com/luxonis/depthai-core.git   # Git repo for source code
