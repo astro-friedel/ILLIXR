@@ -310,6 +310,7 @@ macro(install_shaders SHADER_LIST PLUG LIB_NAME)
     endforeach()
     target_compile_definitions(${LIB_NAME} PUBLIC -DSHADER_FOLDER=\"${INST_LOC}\")
 endmacro()
+
 macro(add_test_coverage name)
     gtest_discover_tests(${name})
     if(ENABLE_COVERAGE)
@@ -318,10 +319,21 @@ macro(add_test_coverage name)
     endif()
 endmacro()
 
-macro(add_test plugin_name)
-    add_executable(test_${plugin_name} test/test_plugin.cpp)
-    target_include_directories(test_${plugin_name} PRIVATE ${ILLIXR_SOURCE_DIR}/include)
-    target_link_libraries(test_${plugin_name} PRIVATE GTest::gtest_main ${PLUGIN_NAME})
+macro(add_illixr_test plugin_name)
+    set(DEPENDENCIES ${ARGN})
+    add_executable(test_${plugin_name}
+                   test/test_plugin.cpp
+                   plugin.hpp
+                   ${CMAKE_SOURCE_DIR}/plugins/test/test_macros.hpp
+                   )
+    get_target_property(INCLUDES ${plugin_name} INCLUDE_DIRECTORIES)
+    target_include_directories(test_${plugin_name} PUBLIC ${INCLUDES} ${CMAKE_SOURCE_DIR}/plugins/test ${SQLite3_INCLUDE_DIR})
+    target_link_libraries(test_${plugin_name} PUBLIC GTest::gtest_main ${PLUGIN_NAME} spdlog::spdlog ${SQLite3_LIBRARIES})
+    foreach (DEP IN LISTS DEPENDENCIES)
+        target_link_libraries(test_${plugin_name} PUBLIC ${DEP})
+        add_dependencies(test_${plugin_name} ${DEP})
+    endforeach()
+    target_compile_definitions(test_${plugin_name} PUBLIC -DBUILD_TEST)
     add_dependencies(test_${plugin_name} ${plugin_name})
     gtest_discover_tests(test_${plugin_name})
     if(ENABLE_COVERAGE)
