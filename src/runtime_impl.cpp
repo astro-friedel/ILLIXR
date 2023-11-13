@@ -9,7 +9,7 @@
 #include "illixr/record_logger.hpp"
 #include "illixr/stoplight.hpp"
 #include "illixr/switchboard.hpp"
-#include "sqlite_record_logger.hpp"
+#include "illixr/sqlite_record_logger.hpp"
 
 #include <algorithm>
 #include <GL/glx.h>
