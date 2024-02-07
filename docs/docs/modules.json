@@ -20,7 +20,6 @@
         "22"
       ]
     }
-
   ],
   "plugins": [
     {
@@ -1064,12 +1063,12 @@
         "pkg": {
           "Ubuntu": {
             "20": {
-              "pkg": "qemu qemu-system qemu-system-data qeum-utils qemu-user libqcow-dev libqcow-utils",
+              "pkg": "qemu qemu-system qemu-system-data qemu-utils qemu-user libqcow-dev libqcow-utils",
               "postnotes": "",
               "notes": ""
             },
             "22": {
-              "pkg": "qemu qemu-system qemu-system-data qeum-utils qemu-user libqcow-dev libqcow-utils",
+              "pkg": "qemu qemu-system qemu-system-data qemu-utils qemu-user libqcow-dev libqcow-utils",
               "postnotes": "",
               "notes": ""
             }

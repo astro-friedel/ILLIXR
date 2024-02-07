@@ -81,6 +81,13 @@ option(DATA_FILE "The data file to get" ON)
 set(DATA_FILE "http://robotics.ethz.ch/~asl-datasets/ijrr_euroc_mav_dataset/vicon_room1/V1_02_medium/V1_02_medium.zip")
 
 option(BUILD_DOCS "Build documentation" OFF)
+set(MAKE_DOCKERFILE NO CACHE STRING "Generate Dockerfiles, requires Python3. Valid values are ALL, ON, OFF, YES, NO, or a comma separated list of supported operating systems (e.g. UBUNTU, FEDORA, UBUNTU-20, etc.")
+
+option(BUILD_DOCKER "Build docker images, requires Docker and the docker Python module." OFF)
+if(BUILD_DOCKER AND NOT MAKE_DOCKERFILE)
+    message(FATAL_ERROR "BUILD_DOCKER is selected, but MAKE_DOCKERFILE is not. Please set MAKE_DOCKERFILE.")
+endif()
+
 option(USE_MONADO "Build for monado use" OFF)
 include(cmake/HelperFunctions.cmake)
 
@@ -218,7 +225,6 @@ set(CURRENT_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}" CACHE INTERNAL "")
 
 # set up documentaiton build
 add_subdirectory(docs)
-
 # deal with the data file if there is one
 if(DATA_FILE)
     string(REGEX MATCH "^http" HAVE_MATCH ${DATA_FILE})
@@ -255,6 +261,14 @@ endif()
 set(VISUALIZER "" CACHE STRING "")
 
 find_package(Python3 COMPONENTS Interpreter)
+if(MAKE_DOCKERFILE)
+    if(Python3_FOUND)
+        add_subdirectory(docker)
+    else()
+        message(WARNING "Python3 is required to build the dockerfiles")
+    endif()
+endif()
+
 if(Python3_FOUND)
     set(dependencies "")
     if(USE_AUDIO_PIPELINE)
