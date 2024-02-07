@@ -437,6 +437,14 @@ private:
             throw std::runtime_error{"Failed to allocate FFmpeg encoder context"};
         }
 
+        // read bit rate from environment variable
+        char* bitrate_env = std::getenv("ILLIXR_OFFLOAD_RENDERING_BITRATE");
+        if (bitrate_env) {
+            codec_ctx->bit_rate = std::stoul(bitrate_env);
+        } else {
+            codec_ctx->bit_rate = OFFLOAD_RENDERING_BITRATE;
+        }
+
         codec_ctx->thread_count = 0; // auto
         codec_ctx->thread_type  = FF_THREAD_SLICE;
 
@@ -447,7 +455,6 @@ private:
         codec_ctx->height        = buffer_pool->image_pool[0][0].image_info.extent.height;
         codec_ctx->time_base     = {1, 60}; // 60 fps
         codec_ctx->framerate     = {60, 1};
-        codec_ctx->bit_rate      = OFFLOAD_RENDERING_BITRATE; // 10 Mbps
 
         // Set zero latency
         codec_ctx->max_b_frames = 0;
