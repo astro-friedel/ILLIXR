@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-
+"""
+Buiuld docker images for the specified operating systems and versions
+"""
 import argparse
 import json
 import os
@@ -43,24 +45,28 @@ def build(images):
             client.remove_image(img['Id'], force=True, norpune=True)
     print("Building Docker images...")
     for image in images:
-        ops, ver = image.lower().split("-")
+        ops, ver = image.split("-")
         print(f"Building illixr_{ops}:{ver}...")
-        for line in client.build(path=f"{script_directory}/{ops}/{ver}", tag=f"illixr_{ops}:{ver}"):
-            data = line.decode("utf-8")
-            if data:
-                data = json.loads(data.strip())
-                if "stream" in data:
-                    print(data["stream"])
-                elif "error" in data:
-                    print(f"Error: {data['error']}"
+        for line in client.build(path=f"{os.path.join(script_directory, 'OS', ops, ver)}", tag=f"illixr_{ops.lower()}:{ver}"):
+            data = line.decode("utf-8").replace("\\n", "")
+            data = data.split("\r")
+            for d in data:
+                d = d.strip()
+                if not d:
+                    continue
+                report = json.loads(d)
+                if "stream" in report:
+                    print(report["stream"])
+                elif "error" in report:
+                    raise RuntimeError(f"Error: {report['error']}")
                 else:
-                    print("\n"))
+                    print("\n")
     print("  Done")
 
 
 if __name__ == "__main__":
     opers = list(docker_images.keys())
-    choices = [f"{x}-{y}" for x, z in docker_images.items() for y in z.keys()]
+    choices = [f"{x}-{y}" for x, z in docker_images.items() for y in z["versions"].keys()]
     args = parse_args(opers + choices)
 
     if args.os is None or args.os.upper() == 'ALL':

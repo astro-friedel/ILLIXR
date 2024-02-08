@@ -31,6 +31,7 @@ are not available in the distribution repos. The instructions below are a genera
 
 </div>
 <br>
+The following sections will use ILLIXR as the root directory of the cloned ILLIXR repository.
 
 ### Install dependencies
 
@@ -101,6 +102,66 @@ See [profile][23] for the format.
 The current list of plugins is: @FULL_PLUGIN_LIST_STRING@
 
 The CMake process will also create a [_YAML_][2] file call `illixr.yaml` which can be used as input to the binary.
+
+## Docker Images
+
+The ILLIXR project provides a way to generate a set of [Dockerfiles][24]  which can generate set of [Docker][25] images for building and running ILLIXR. These images are used in the CI/CD pipeline for the project. These Dockerfiles and images can be created via the CMake build system by passing the `MAKE_DOCKERFILE` and `BUILD_DOCKER` arguments respectively.
+
+### Generating Dockerfiles
+
+The `MAKE_DOCKERFILE` argument takes one or more (comma separated) of the following values:
+
+- Ubuntu-20, to generate a Dockerfile based on Ubuntu 20.04
+- Ubuntu-22, to generate a Dockerfile based on Ubuntu 22.04
+- Ubuntu, to generate both Ubuntu-20 and Ubuntu-22 Dockerfiles
+- Fedora-37, to generate a Dockerfile based on Fedora 37
+- Fedora-38, to generate a Dockerfile based on Fedora 38
+- Fedora, to generate both Fedora-37 and Fedora-38 Dockerfiles
+- CentOS-9, to generate a Dockerfile based on CentOS 9
+- CentOS, to generate the CentOS-9 Dockerfile
+- All, to generate all of the above Dockerfiles
+
+When the code is built the Dockerfiles will be generated. For example, from the build directory:
+
+```bash
+cmake --build .
+```
+
+The Dockerfiles can also be generated without building the code:
+
+```bash
+cmake --build . -t dockerfile
+```
+
+The generated Dockerfiles, regardless of method, will be placed in the `docker/<OS>/<VER>` directory of the build d
+directory, where `OS` is Ubuntu, Fedora, or CentOS, and `VER` is the respective version number.
+
+### Building the Docker Images
+
+Building the Docker images requires Docker to be installed, and the Docker daemon to be running. There are two ways to
+ build the Docker images:
+
+  1. By giving the `-DBUILD_DOCKER=ON` argument to CMake will have the build system build the Docker images. Note that using this method of building the Docker images requires the Python package [docker][26] to be installed.
+
+  2. By using the `docker build` command from the command line. For example, from the docker directory in the repo:
+
+```bash
+    docker build --tag illixr-ubuntu:20 -f Ubuntu/20 .
+```
+
+Each Docker image will have the master branch of the ILLIXR repo cloned into them as well as
+a bash script called `build.sh`. The script can take the following command line arguments:
+
+- -p &lt;&gt;, the [profile][23] to use, required
+- -b &lt;&gt;, the branch to build (if no argument is given then the master branch will be used)
+- -r, build in Release mode, default is Debug mode
+- -j &lt;&gt;, the number of threads to use for the build, default is 4
+
+The script builds and installs ILLIXR into `/home/illixr/ilxr/[bin/lib/share/etc/doc]`. The bin directory is already in the
+`PATH` and the lib directory is already in the `LD_LIBRARY_PATH` variables via `.bashrc`
+
+When running the Docker image in a container it is up to the user to be sure any necessary ports are exposed.
+
 
 ## Running ILLIXR
 
@@ -179,11 +240,18 @@ Where the entries are defined as (* indicates required field):
 - enable_pre_sleep
 : ? Default is *false*
 
-In general, you should not edit a [profile][23] file directly. The exception to this is when you are testing things on your own machine. [Profile][23] files are generated automatically from the master `profiles/plugins.yaml` during the cmake configuration stage. This is done so that any changes to a [profile][23] or the addition or removal of a [plugin][22] can be managed from a single file. The build system will generate an *illixr.yaml* file which contains entries from the command line and any input profile file and can be freely edited (it is generated every time `cmake` is called).
+In general, you should not edit a [profile][23] file directly. The exception to this is when you are testing things on
+your own machine. [Profile][23] files are generated automatically from the master `profiles/plugins.yaml` during the
+cmake configuration stage. This is done so that any changes to a [profile][23] or the addition or removal of a
+[plugin][22] can be managed from a single file. The build system will generate an *illixr.yaml* file which contains
+entries from the command line and any input profile file and can be freely edited (it is generated every time `cmake`
+is called).
 
 ## ILLIXR Graphics Backends
 
-ILLIXR currently supports both OpenGL and Vulkan backends (indicated as `gl` and `vk` in the config suffixes). Since some plugins should behave differently (and compile differently) based on what backend is being used, it's important to run `make clean` if you want to try swapping between the two backends.
+ILLIXR currently supports both OpenGL and Vulkan backends (indicated as `gl` and `vk` in the config suffixes). Since
+some plugins should behave differently (and compile differently) based on what backend is being used, it's important
+to run `make clean` if you want to try swapping between the two backends.
 
 ## Rationale
 

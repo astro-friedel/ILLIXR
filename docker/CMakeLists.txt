@@ -8,7 +8,6 @@ endif()
 set(MAKE_DOCKERFILE ${MAKE_DOCKERFILE} CACHE STRING "")
 
 
-#file(STRINGS "modules-comp.dckr" MODULE_YAML)
 set(COUNTER 0)
 set(OPERATING_SYSTEMS "")
 set(IN_SYSTEMS FALSE)
@@ -16,9 +15,12 @@ set(IN_OS FALSE)
 set(IN_VERSIONS FALSE)
 set(CURRENT_OS "")
 
-file(READ ../docs/docs/modules.json MODULE_TEMP)
+# get the list of possible operating systems
+file(READ ${CMAKE_SOURCE_DIR}/docs/docs/modules.json MODULE_TEMP)
 string(REPLACE "@PROFILES@" "" MODULE_JSON "${MODULE_TEMP}")
-file(WRITE modules-comp.json "${MODULE_JSON}")
+file(WRITE ${CMAKE_BINARY_DIR}/docker/modules-comp.json "${MODULE_JSON}")
+
+# newer versions of CMake can directly interpret JSON in strings
 if(CMAKE_MAJOR_VERSION GREATER_EQUAL 3 AND CMAKE_MINOR_VERSION GREATER_EQUAL 19)
     string(JSON POSSIBLE_SYSTEMS GET ${MODULE_JSON} systems)
     string(JSON NUM_OS LENGTH ${POSSIBLE_SYSTEMS})
@@ -36,11 +38,16 @@ if(CMAKE_MAJOR_VERSION GREATER_EQUAL 3 AND CMAKE_MINOR_VERSION GREATER_EQUAL 19)
         endforeach()
     endforeach()
 else()
+    # for legacy (pre 3.19) versions of CMake, we have to parse the JSON ourselves
+
+    # first we need to replace [, ], and \n with |, ?, and ; respectively otherwise the string will be properly
+    #  split into a list
     string(REPLACE "[" "|" MODULE_JSON ${MODULE_JSON})
     string(REPLACE "]" "?" MODULE_JSON ${MODULE_JSON})
     string(REPLACE "\n" ";" MODULE_JSON ${MODULE_JSON})
 
     foreach(LINE IN LISTS MODULE_JSON)
+        # look for the systems section
         if(NOT IN_SYSTEMS)
             string(FIND ${LINE} "systems" FOUND)
             if(${FOUND} GREATER -1)
@@ -48,6 +55,7 @@ else()
                 math(EXPR COUNTER "${COUNTER} + 1")
             endif()
         else()
+            # keep track of the number of open and close brackets (replaced by | and ?)
             string(FIND ${LINE} "|" FOUND)
             if(FOUND GREATER -1)
                 math(EXPR COUNTER "${COUNTER} + 1")
@@ -59,12 +67,15 @@ else()
                     set(IN_VERSIONS FALSE)
                 endif()
             endif()
+            # if the systems section is closed, then exit as we are done
             if(${COUNTER} EQUAL 0)
                 break()
-            endif()
+            endif(${COUNTER} EQUAL 0)
             if(NOT IN_OS)
+                # look for a new operating system name
                 string(FIND ${LINE} "name" FOUND)
                 if(${FOUND} GREATER -1)
+                    # parse the name of the operating system
                     string(REPLACE "\"name\": " "" LINE ${LINE})
                     string(REPLACE "\"" "" LINE ${LINE})
                     string(REPLACE "," "" LINE ${LINE})
@@ -74,54 +85,80 @@ else()
                     set(${CURRENT_OS}_VERSIONS "")
                     set(IN_OS TRUE)
                     continue()
-                endif()
+                endif(${FOUND} GREATER -1)
             else()
+                # look for the closing of the operating system section
                 string(FIND ${LINE} "}" FOUND)
                 if(${FOUND} GREATER -1)
                     set(IN_OS FALSE)
                     continue()
-                endif()
+                endif(${FOUND} GREATER -1)
                 if(NOT IN_VERSIONS)
+                    # look for versions section
                     string(FIND ${LINE} "versions" FOUND)
                     if(${FOUND} GREATER -1)
                         set(IN_VERSIONS TRUE)
                         continue()
                     endif()
                 else()
+                    # get the versions for this OS
                     string(REGEX MATCH "([0-9]+)" VERSION ${LINE})
                     if(VERSION)
                         list(APPEND ${CURRENT_OS}_VERSIONS ${VERSION})
                         #list(APPEND OPERATING_SYSTEMS "${CURRENT_OS}${VERSION}")
-                    endif()
-                endif()
-            endif()
-        endif()
+                    endif(VERSION)
+                endif(NOT IN_VERSIONS)
+            endif(NOT IN_OS)
+        endif(NOT IN_SYSTEMS)
     endforeach()
-endif()
+endif(CMAKE_MAJOR_VERSION GREATER_EQUAL 3 AND CMAKE_MINOR_VERSION GREATER_EQUAL 19)
 
-string(REPLACE ";" "," DOCKER_STRING ${MAKE_DOCKERFILE})
-# add target to generate dockerfiles
+# copy the python files which deal with the dockerfile generation to the build directory
+configure_file(${CMAKE_SOURCE_DIR}/docker/generate_dockerfiles.py
+               ${CMAKE_BINARY_DIR}/docker/generate_dockerfiles.py
+               COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/docker/images.py
+               ${CMAKE_BINARY_DIR}/docker/images.py
+               COPYONLY)
+configure_file(${CMAKE_SOURCE_DIR}/docker/build.sh
+               ${CMAKE_BINARY_DIR}/docker/build.sh
+               COPYONLY)
+
+file(CHMOD ${CMAKE_BINARY_DIR}/docker/generate_dockerfiles.py ${CMAKE_BINARY_DIR}/docker/build.sh
+     PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ)
+file(CHMOD ${CMAKE_BINARY_DIR}/docker/images.py
+     PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
+
+# create the dockerfile generation target
 add_custom_target(dockerfile ALL
-                  COMMAND ${CMAKE_SOURCE_DIR}/docker/generate_dockerfiles.py -f modules-comp.json --os=${DOCKER_STRING})
+                  COMMAND ${CMAKE_BINARY_DIR}/docker/generate_dockerfiles.py -f modules-comp.json --os=${MAKE_DOCKERFILE})
 
 if(BUILD_DOCKER)
+    # copy the python file which builds the docker files to the build directory
+    configure_file(${CMAKE_SOURCE_DIR}/docker/build_docker.py
+                   ${CMAKE_BINARY_DIR}/docker/build_docker.py
+                   COPYONLY)
+    file(CHMOD ${CMAKE_BINARY_DIR}/docker/build_docker.py
+         PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_EXECUTE WORLD_READ)
+    # add a target that will build all specified docker images
     add_custom_target(docker ALL
-                      COMMAND ${CMAKE_SOURCE_DIR}/docker/build_docker.py --os=${DOCKER_STRING}
+                      COMMAND ${CMAKE_BINARY_DIR}/docker/build_docker.py --os=${MAKE_DOCKERFILE}
                       DEPENDS dockerfile)
-
+    # generate targets for all of the individual docker images
     if(MAKE_DOCKERFILE STREQUAL "ALL")
         foreach(OSV IN LISTS OPERATING_SYSTEMS)
             set(CUR_VERS "")
             add_custom_target(docker_${OSV}
-                              COMMAND ${CMAKE_SOURCE_DIR}/docker/generate_dockerfiles.py --os=${OSV}
+                              COMMAND ${CMAKE_BINARY_DIR}/docker/build_docker.py --os=${OSV}
                               DEPENDS dockerfile)
             foreach(VERSION IN LISTS ${OSV}_VERSIONS)
                 add_custom_target(docker_${OSV}-${VERSION}
-                                  COMMAND ${CMAKE_SOURCE_DIR}/docker/generate_dockerfiles.py --os=${OSV}-${VERSION}
+                                  COMMAND ${CMAKE_BINARY_DIR}/docker/build_docker.py --os=${OSV}-${VERSION}
                                   DEPENDS dockerfile)
             endforeach ()
         endforeach ()
     else()
+        # generate targets for each of the specified docker images
         foreach(ITEM IN LISTS MAKE_DOCKERFILE)
             string(FIND ${ITEM} "-" FOUND)
             set(MTCH FALSE)
@@ -138,11 +175,11 @@ if(BUILD_DOCKER)
                             set(MTCH TRUE)
 
                             add_custom_target(docker_${OPS}-${VERNUM}
-                                              COMMAND ${CMAKE_SOURCE_DIR}/docker/generate_dockerfiles.py --os=${OPS}-${VERNUM}
+                                              COMMAND ${CMAKE_BINARY_DIR}/docker/generate_dockerfiles.py --os=${OPS}-${VERNUM}
                                               DEPENDS dockerfile)
                             break()
-                        endif()
-                    endif()
+                        endif(FOUND GREATER -1)
+                    endif(VERSION STREQUAL UPPER_OPS)
                 endforeach()
             else()
                 string(TOUPPER ${ITEM} UPPER_OS)
@@ -152,30 +189,16 @@ if(BUILD_DOCKER)
                         set(MTCH TRUE)
                         foreach(VER IN LISTS ${OPS}_VERSIONS)
                             add_custom_target(docker_${OPS}-${VER}
-                                              COMMAND ${CMAKE_SOURCE_DIR}/docker/generate_dockerfiles.py --os=${OPS}-${VER}
+                                              COMMAND ${CMAKE_BINARY_DIR}/docker/generate_dockerfiles.py --os=${OPS}-${VER}
                                               DEPENDS dockerfile)
                         endforeach ()
                         break()
-                    endif()
+                    endif(UPPER_OS STREQUAL UPPER_OPS)
                 endforeach()
-
-            endif()
+            endif(FOUND GREATER -1)
             if(NOT MTCH)
                 message(FATAL_ERROR "Could not find ${ITEM}")
             endif()
         endforeach()
-    endif()
-
-        #        list(APPEND CUR_VERS "${OSV}-${VERSION}")
-    #        add_custom_target(dockerfile_${OSV}-${VERSION}
-    #                          COMMAND ${CMAKE_SOURCE_DIR}/docker/generate_dockerfiles.py --file=modules-comp.json --os=${OSV}-${VERSION})
-    #        add_custom_target(docker_${OSV}-${VERSION}
-    #                          COMMAND ${CMAKE_SOURCE_DIR}/docker/generate_dockerfiles.py --file=modules-comp.json --os=${OSV}-${VERSION} --build)
-    #    endforeach()
-    #    string(REPLACE ";" "," CUR_VERS "${CUR_VERS}")
-    #    add_custom_target(dockerfile_${OSV}
-    #                      COMMAND ${CMAKE_SOURCE_DIR}/docker/generate_dockerfiles.py --file=modules-comp.json --os=${OSV})
-    #    add_custom_target(docker_${OSV}
-    #                      COMMAND ${CMAKE_SOURCE_DIR}/docker/generate_dockerfiles.py --file=modules-comp.json --os=${OSV} --build)
-    #endforeach()
-endif()
+    endif(MAKE_DOCKERFILE STREQUAL "ALL")
+endif(BUILD_DOCKER)
