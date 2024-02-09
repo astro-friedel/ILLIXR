@@ -705,19 +705,19 @@
           },
           "Fedora": {
             "38": {
-              "pkg": "gstreamer-devel gstreamer1-plugins-base-devel",
+              "pkg": "gstreamer1-devel gstreamer1-plugins-base-devel",
               "postnotes": "",
               "notes": ""
             },
             "39": {
-              "pkg": "gstreamer-devel gstreamer1-plugins-base-devel",
+              "pkg": "gstreamer1-devel gstreamer1-plugins-base-devel",
               "postnotes": "",
               "notes": ""
             }
           },
           "CentOS": {
             "9": {
-              "pkg": "gstreamer-devel gstreamer1-plugins-base-devel",
+              "pkg": "gstreamer1-devel gstreamer1-plugins-base-devel",
               "postnotes": "",
               "notes": ""
             }
