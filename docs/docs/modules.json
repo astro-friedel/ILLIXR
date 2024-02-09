@@ -9,8 +9,8 @@
     {
       "name": "Fedora",
       "versions": [
-        "37",
-        "38"
+        "38",
+        "39"
       ]
     },
     {
@@ -334,12 +334,12 @@
             }
           },
           "Fedora": {
-            "37": {
+            "38": {
               "pkg": "boost-devel",
               "postnotes": "",
               "notes": ""
             },
-            "38": {
+            "39": {
               "pkg": "boost-devel",
               "postnotes": "",
               "notes": ""
@@ -371,12 +371,12 @@
             }
           },
           "Fedora": {
-            "37": {
+            "38": {
               "pkg": "graphviz hdf5-devel libcurl-devel qwt-qt5-devel qt5-qtbase-devel libyaml-devel zlib-devel openssl-devel",
               "postnotes": "",
               "notes": ""
             },
-            "38": {
+            "39": {
               "pkg": "graphviz hdf5-devel libcurl-devel qwt-qt5-devel qt5-qtbase-devel libyaml-devel zlib-devel openssl-devel",
               "postnotes": "",
               "notes": ""
@@ -408,12 +408,12 @@
             }
           },
           "Fedora": {
-            "37": {
+            "38": {
               "pkg": "fmt-devel",
               "postnotes": "",
               "notes": ""
             },
-            "38": {
+            "39": {
               "pkg": "fmt-devel",
               "postnotes": "",
               "notes": ""
@@ -445,12 +445,12 @@
             }
           },
           "Fedora": {
-            "37": {
+            "38": {
               "pkg": "gflags-devel",
               "postnotes": "",
               "notes": ""
             },
-            "38": {
+            "39": {
               "pkg": "gflags-devel",
               "postnotes": "",
               "notes": ""
@@ -482,12 +482,12 @@
             }
           },
           "Fedora": {
-            "37": {
+            "38": {
               "pkg": "git",
               "postnotes": "",
               "notes": ""
             },
-            "38": {
+            "39": {
               "pkg": "git",
               "postnotes": "",
               "notes": ""
@@ -519,12 +519,12 @@
             }
           },
           "Fedora": {
-            "37": {
+            "38": {
               "pkg": "glfw-devel",
               "postnotes": "",
               "notes": ""
             },
-            "38": {
+            "39": {
               "pkg": "glfw-devel",
               "postnotes": "",
               "notes": ""
@@ -556,12 +556,12 @@
             }
           },
           "Fedora": {
-            "37": {
+            "38": {
               "pkg": "glib-devel",
               "postnotes": "",
               "notes": ""
             },
-            "38": {
+            "39": {
               "pkg": "glib-devel",
               "postnotes": "",
               "notes": ""
@@ -593,12 +593,12 @@
             }
           },
           "Fedora": {
-            "37": {
+            "38": {
               "pkg": "glm-devel",
               "postnotes": "",
               "notes": ""
             },
-            "38": {
+            "39": {
               "pkg": "glm-devel",
               "postnotes": "",
               "notes": ""
@@ -630,12 +630,12 @@
             }
           },
           "Fedora": {
-            "37": {
+            "38": {
               "pkg": "glog-devel",
               "postnotes": "",
               "notes": ""
             },
-            "38": {
+            "39": {
               "pkg": "glog-devel",
               "postnotes": "",
               "notes": ""
@@ -667,12 +667,12 @@
             }
           },
           "Fedora": {
-            "37": {
+            "38": {
               "pkg": "glslang-devel",
               "postnotes": "",
               "notes": ""
             },
-            "38": {
+            "39": {
               "pkg": "glslang-devel",
               "postnotes": "",
               "notes": ""
@@ -704,12 +704,12 @@
             }
           },
           "Fedora": {
-            "37": {
+            "38": {
               "pkg": "gstreamer-devel gstreamer1-plugins-base-devel",
               "postnotes": "",
               "notes": ""
             },
-            "38": {
+            "39": {
               "pkg": "gstreamer-devel gstreamer1-plugins-base-devel",
               "postnotes": "",
               "notes": ""
@@ -741,12 +741,12 @@
             }
           },
           "Fedora": {
-            "37": {
+            "38": {
               "pkg": "libjpeg-turbo-devel",
               "postnotes": "",
               "notes": ""
             },
-            "38": {
+            "39": {
               "pkg": "libjpeg-turbo-devel",
               "postnotes": "",
               "notes": ""
@@ -778,12 +778,12 @@
             }
           },
           "Fedora": {
-            "37": {
+            "38": {
               "pkg": "openni-devel",
               "postnotes": "",
               "notes": ""
             },
-            "38": {
+            "39": {
               "pkg": "openni-devel",
               "postnotes": "",
               "notes": ""
@@ -815,12 +815,12 @@
             }
           },
           "Fedora": {
-            "37": {
+            "38": {
               "pkg": "libusb1-devel",
               "postnotes": "",
               "notes": ""
             },
-            "38": {
+            "39": {
               "pkg": "libusb1-devel",
               "postnotes": "",
               "notes": ""
@@ -852,15 +852,15 @@
             }
           },
           "Fedora": {
-            "37": {
-              "pkg": "",
-              "postnotes": "",
-              "notes": "Fedora does not supply libuvc from its repositories. You will need to install it from <a href=\"https://github.com/libuvc/libuvc\">https://github.com/libuvc/libuvc</a>."
-            },
             "38": {
-              "pkg": "",
+              "pkg": "libuvc-devel",
               "postnotes": "",
-              "notes": "Fedora does not supply libuvc from its repositories. You will need to install it from <a href=\"https://github.com/libuvc/libuvc\">https://github.com/libuvc/libuvc</a>."
+              "notes": ""
+            },
+            "39": {
+              "pkg": "libuvc-devel",
+              "postnotes": "",
+              "notes": ""
             }
           },
           "CentOS": {
@@ -889,12 +889,12 @@
             }
           },
           "Fedora": {
-            "37": {
+            "38": {
               "pkg": "opencv-devel",
               "postnotes": "",
               "notes": ""
             },
-            "38": {
+            "39": {
               "pkg": "opencv-devel",
               "postnotes": "",
               "notes": ""
@@ -926,12 +926,12 @@
             }
           },
           "Fedora": {
-            "37": {
+            "38": {
               "pkg": "openxr-devel",
               "postnotes": "",
               "notes": ""
             },
-            "38": {
+            "39": {
               "pkg": "openxr-devel",
               "postnotes": "",
               "notes": ""
@@ -963,12 +963,12 @@
             }
           },
           "Fedora": {
-            "37": {
+            "38": {
               "pkg": "patch",
               "postnotes": "",
               "notes": ""
             },
-            "38": {
+            "39": {
               "pkg": "patch",
               "postnotes": "",
               "notes": ""
@@ -1000,12 +1000,12 @@
             }
           },
           "Fedora": {
-            "37": {
+            "38": {
               "pkg": "libpng-devel",
               "postnotes": "",
               "notes": ""
             },
-            "38": {
+            "39": {
               "pkg": "libpng-devel",
               "postnotes": "",
               "notes": ""
@@ -1037,12 +1037,12 @@
             }
           },
           "Fedora": {
-            "37": {
+            "38": {
               "pkg": "protobuf-devel protobuf-compiler",
               "postnotes": "",
               "notes": ""
             },
-            "38": {
+            "39": {
               "pkg": "protobuf-devel protobuf-compiler",
               "postnotes": "",
               "notes": ""
@@ -1074,22 +1074,22 @@
             }
           },
           "Fedora": {
-            "37": {
-              "pkg": "??",
-              "postnotes": "",
-              "notes": ""
-            },
             "38": {
-              "pkg": "??",
+              "pkg": "qemu qemu-user qemu-img libqcow-devel",
               "postnotes": "",
-              "notes": ""
+              "notes": "Fedora does not provide libqcow from its main repositories, but it can be installed from the 3rd party vendor by adding the following repo to your system:<div class=\"code-box-copy\">\n<button class=\"code-box-copy__btn\" data-clipboard-target=\"#qcowF38\" title=\"Copy\"></button><pre class=\"language-shell\" id=\"qcowF38\">wget -nv https://forensics.cert.org/cert-forensics-tools-release-38.rpm\nsudo rpm -Uvh cert-forensics-tools-release*rpm\nsudo dnf config-manager --set-enabled forensics</pre></div>"
+            },
+            "39": {
+              "pkg": "qemu qemu-user qemu-img libqcow-devel",
+              "postnotes": "",
+              "notes": "Fedora does not provide libqcow from its main repositories, but it can be installed from the 3rd party vendor by adding the following repo to your system:<div class=\"code-box-copy\">\n<button class=\"code-box-copy__btn\" data-clipboard-target=\"#qcowF39\" title=\"Copy\"></button><pre class=\"language-shell\" id=\"qcowF39\">wget -nv https://forensics.cert.org/cert-forensics-tools-release-39.rpm\nsudo rpm -Uvh cert-forensics-tools-release*rpm\nsudo dnf config-manager --set-enabled forensics</pre></div>"
             }
           },
           "CentOS": {
             "9": {
-              "pkg": "??",
+              "pkg": "qemu qemu-user qemu-img qemu-tools libqcow-devel",
               "postnotes": "",
-              "notes": ""
+              "notes": "CentOS does not provide qemu from its main repositories, but it can be installed from the 3rd party vendor by adding the following repo to your system:<div class=\"code-box-copy\">\n<button class=\"code-box-copy__btn\" data-clipboard-target=\"#qemuC09\" title=\"Copy\"></button><pre class=\"language-shell\" id=\"qemuC09\">wget -nv http://mirror.ghettoforge.org/distributions/gf/el/9/gf/x86_64/gf-release-9-13.gf.el9.noarch.rpm\nsudo rpm -Uvh gf-release*rpm\nsudo dnf config-manager --set-enabled gf</pre></div>\n\nCentOS does not provide libqcow from its main repositories, but it can be installed from the 3rd party vendor by adding the following repo to your system:<div class=\"code-box-copy\">\n<button class=\"code-box-copy__btn\" data-clipboard-target=\"#qcowC09\" title=\"Copy\"></button><pre class=\"language-shell\" id=\"qcowC09\">wget -nv https://forensics.cert.org/cert-forensics-tools-release-el9.rpm\nsudo rpm -Uvh cert-forensics-tools-release*rpm\nsudo dnf config-manager --set-enabled forensics</pre></div>"
             }
           }
         }
@@ -1111,12 +1111,12 @@
             }
           },
           "Fedora": {
-            "37": {
+            "38": {
               "pkg": "librealsense-devel",
               "postnotes": "",
               "notes": ""
             },
-            "38": {
+            "39": {
               "pkg": "librealsense-devel",
               "postnotes": "",
               "notes": ""
@@ -1148,12 +1148,12 @@
             }
           },
           "Fedora": {
-            "37": {
+            "38": {
               "pkg": "SDL2-devel",
               "postnotes": "",
               "notes": ""
             },
-            "38": {
+            "39": {
               "pkg": "SDL2-devel",
               "postnotes": "",
               "notes": ""
@@ -1185,12 +1185,12 @@
             }
           },
           "Fedora": {
-            "37": {
+            "38": {
               "pkg": "libtiff-devel",
               "postnotes": "",
               "notes": ""
             },
-            "38": {
+            "39": {
               "pkg": "libtiff-devel",
               "postnotes": "",
               "notes": ""
@@ -1222,12 +1222,12 @@
             }
           },
           "Fedora": {
-            "37": {
+            "38": {
               "pkg": "systemd-udev systemd-devel",
               "postnotes": "",
               "notes": ""
             },
-            "38": {
+            "39": {
               "pkg": "systemd-udev systemd-devel",
               "postnotes": "",
               "notes": ""
@@ -1259,12 +1259,12 @@
             }
           },
           "Fedora": {
-            "37": {
+            "38": {
               "pkg": "vulkan-loader-devel vulkan-validation-layers",
               "postnotes": "",
               "notes": ""
             },
-            "38": {
+            "39": {
               "pkg": "vulkan-loader-devel vulkan-validation-layers",
               "postnotes": "",
               "notes": ""
@@ -1296,12 +1296,12 @@
             }
           },
           "Fedora": {
-            "37": {
+            "38": {
               "pkg": "wayland-devel wayland-protocols-devel",
               "postnotes": "",
               "notes": ""
             },
-            "38": {
+            "39": {
               "pkg": "wayland-devel wayland-protocols-devel",
               "postnotes": "",
               "notes": ""
@@ -1333,12 +1333,12 @@
             }
           },
           "Fedora": {
-            "37": {
+            "38": {
               "pkg": "libX11-xcb libxcb-devel",
               "postnotes": "",
               "notes": ""
             },
-            "38": {
+            "39": {
               "pkg": "libX11-xcb libxcb-devel",
               "postnotes": "",
               "notes": ""
@@ -1370,12 +1370,12 @@
             }
           },
           "Fedora": {
-            "37": {
+            "38": {
               "pkg": "",
               "postnotes": "",
               "notes": ""
             },
-            "38": {
+            "39": {
               "pkg": "",
               "postnotes": "",
               "notes": ""
@@ -1407,12 +1407,12 @@
             }
           },
           "Fedora": {
-            "37": {
+            "38": {
               "pkg": "",
               "postnotes": "",
               "notes": ""
             },
-            "38": {
+            "39": {
               "pkg": "",
               "postnotes": "",
               "notes": ""
@@ -1444,12 +1444,12 @@
             }
           },
           "Fedora": {
-            "37": {
+            "38": {
               "pkg": "libxkbcommon-devel",
               "postnotes": "",
               "notes": ""
             },
-            "38": {
+            "39": {
               "pkg": "libxkbcommon-devel",
               "postnotes": "",
               "notes": ""
@@ -1481,12 +1481,12 @@
             }
           },
           "Fedora": {
-            "37": {
+            "38": {
               "pkg": "",
               "postnotes": "",
-              "notes": ""
+              "notes": "The zed plugin requires the <a href=\"https://www.stereolabs.com/docs/installation/linux/\">ZED SDK</a>, but this package is currently only available for Ubuntu."
             },
-            "38": {
+            "39": {
               "pkg": "",
               "postnotes": "",
               "notes": ""
@@ -1496,7 +1496,7 @@
             "9": {
               "pkg": "",
               "postnotes": "",
-              "notes": ""
+              "notes": "The zed plugin requires the <a href=\"https://www.stereolabs.com/docs/installation/linux/\">ZED SDK</a>, but this package is currently only available for Ubuntu."
             }
           }
         }

@@ -9,12 +9,12 @@ ILLIXR currently only builds on Linux systems, and has been tested on the follow
     - 20.04
     - 22.04
 - Fedora[^1]
-    - 37
     - 38
+    - 39
 - CentOS[^1]
     - stream9
 
-[^1]: Primary development is aimed at Ubuntu systems, full support for Fedora and CentOS may lag behind.
+[^1]: Primary development is aimed at Ubuntu systems, full support for Fedora and CentOS may lag behind, and may not be possible for all plugins due to 3rd party dependencies.
 
 Other versions of these operating systems may work, but will likely require some manual installation of dependencies.
 For other Linux distributions (e.g. RHEL) it will require significant manual installation of dependencies as many
@@ -114,9 +114,9 @@ The `MAKE_DOCKERFILE` argument takes one or more (comma separated) of the follow
 - Ubuntu-20, to generate a Dockerfile based on Ubuntu 20.04
 - Ubuntu-22, to generate a Dockerfile based on Ubuntu 22.04
 - Ubuntu, to generate both Ubuntu-20 and Ubuntu-22 Dockerfiles
-- Fedora-37, to generate a Dockerfile based on Fedora 37
 - Fedora-38, to generate a Dockerfile based on Fedora 38
-- Fedora, to generate both Fedora-37 and Fedora-38 Dockerfiles
+- Fedora-39, to generate a Dockerfile based on Fedora 39
+- Fedora, to generate both Fedora-38 and Fedora-39 Dockerfiles
 - CentOS-9, to generate a Dockerfile based on CentOS 9
 - CentOS, to generate the CentOS-9 Dockerfile
 - All, to generate all of the above Dockerfiles
