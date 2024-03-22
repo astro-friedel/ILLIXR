@@ -42,7 +42,7 @@ def build(images):
         if img:
             img = img[0]
             print(f"Image illixr_{ops}:{ver} already exists. Removing previous version...")
-            client.remove_image(img['Id'], force=True, norpune=True)
+            client.remove_image(img['Id'], force=True, noprune=True)
     print("Building Docker images...")
     for image in images:
         ops, ver = image.split("-")
@@ -72,6 +72,6 @@ if __name__ == "__main__":
     if args.os is None or args.os.upper() == 'ALL':
         to_build = set(choices)
     else:
-        to_build = make_list(args.os.split(','), opers, choices)
+        to_build = make_list()  # args.os.split(','), opers, choices)
 
     build(to_build)

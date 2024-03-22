@@ -81,7 +81,7 @@ option(DATA_FILE "The data file to get" ON)
 set(DATA_FILE "http://robotics.ethz.ch/~asl-datasets/ijrr_euroc_mav_dataset/vicon_room1/V1_02_medium/V1_02_medium.zip")
 
 option(BUILD_DOCS "Build documentation" OFF)
-set(MAKE_DOCKERFILE NO CACHE STRING "Generate Dockerfiles, requires Python3. Valid values are ALL, ON, OFF, YES, NO, or a comma separated list of supported operating systems (e.g. UBUNTU, FEDORA, UBUNTU-20, etc.")
+set(MAKE_DOCKERFILE NO CACHE STRING "Generate Dockerfile based on Ubuntu 22.04, requires Python3.")
 
 option(BUILD_DOCKER "Build docker images, requires Docker and the docker Python module." OFF)
 if(BUILD_DOCKER AND NOT MAKE_DOCKERFILE)

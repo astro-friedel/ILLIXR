@@ -1,7 +1,7 @@
 
 string(TOUPPER ${MAKE_DOCKERFILE} MAKE_DOCKERFILE)
-if(MAKE_DOCKERFILE MATCHES "^YES|ON|ALL")
-    set(MAKE_DOCKERFILE "ALL")
+if(MAKE_DOCKERFILE MATCHES "^YES|ON")
+    set(MAKE_DOCKERFILE "UBUNTU-22")
 else()
     string(REPLACE "," ";" MAKE_DOCKERFILE ${MAKE_DOCKERFILE})
 endif()
@@ -167,15 +167,15 @@ if(BUILD_DOCKER)
                 list(GET VER_STR 0 VERSION)
                 string(TOUPPER ${VERSION} VERSION)
                 list(GET VER_STR 1 VER_NUM)
-                foreach(OPS IN LIST OPERATING_SYSTEMS)
+                foreach(OPS IN LISTS OPERATING_SYSTEMS)
                     string(TOUPPER ${OPS} UPPER_OPS)
                     if(VERSION STREQUAL UPPER_OPS)
-                        list(FIND ${OPS}_VERSIONS ${VERNUM} FOUND)
+                        list(FIND ${OPS}_VERSIONS ${VER_NUM} FOUND)
                         if(FOUND GREATER -1)
                             set(MTCH TRUE)
 
-                            add_custom_target(docker_${OPS}-${VERNUM}
-                                              COMMAND ${CMAKE_BINARY_DIR}/docker/generate_dockerfiles.py --os=${OPS}-${VERNUM}
+                            add_custom_target(docker_${OPS}-${VER_NUM}
+                                              COMMAND ${CMAKE_BINARY_DIR}/docker/generate_dockerfiles.py --os=${OPS}-${VER_NUM}
                                               DEPENDS dockerfile)
                             break()
                         endif(FOUND GREATER -1)

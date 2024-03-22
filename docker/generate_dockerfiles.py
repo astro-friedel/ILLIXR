@@ -152,7 +152,7 @@ if __name__ == "__main__":
     if args.os.upper() == 'ALL':
         to_create = choices
     else:
-        to_create = make_list(args.os.split(","), opers, choices)
+        to_create = make_list()  # args.os.split(","), opers, choices)
 
     modules = read_modules(args.file)
     print("Generating Dockerfiles for requested operating systems...")
