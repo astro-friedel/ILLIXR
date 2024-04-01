@@ -151,10 +151,8 @@ private:
 
             // Print progress
             percent = static_cast<int>(100 * (img_idx + 1) / _offload_data_container.size());
-            std::cout << "\r"
-                      << "[" << std::string(percent / 2, (char) 61u) << std::string(100 / 2 - percent / 2, ' ') << "] ";
-            std::cout << percent << "%"
-                      << " [Image " << img_idx++ << " of " << _offload_data_container.size() << "]";
+            std::cout << "\r" << "[" << std::string(percent / 2, (char) 61u) << std::string(100 / 2 - percent / 2, ' ') << "] ";
+            std::cout << percent << "%" << " [Image " << img_idx++ << " of " << _offload_data_container.size() << "]";
             std::cout.flush();
         }
         std::cout << std::endl;
